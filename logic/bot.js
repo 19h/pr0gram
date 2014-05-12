@@ -52,6 +52,20 @@ settings.get("lastPost", function (err, p) {
 
 pInc("lastPost");
 
+var health = {
+/*	node: {
+		uptime: XXX,
+		channels: XXX,
+		nick: XXX
+	}
+*/
+};
+
+var lastWrite = (Date.now() / 1000) |0;
+
+exports.health = health;
+exports.lastWrite = lastWrite;
+
 var modules = {
 	// Account
 		hello: function (envelope, cb) {
@@ -157,14 +171,33 @@ var modules = {
 			cb({
 				notice: "[RPC] " + JSON.stringify(envelope)
 			});
+		},
+		handshake: function (envelope, cb) {
+			health[envelope.nick] = envelope;
+
+			cb({
+				status: "OK"
+			})
 		}
 }
 
 var server = net.createServer(function (sock) {
+	var node;
+
 	sock.on("data", function (data) {
 		try {
 			data = JSON.parse(data.toString())
 		} catch(e) { return void 0 }
+
+		if ( data.nodeName ) {
+			node = data.nodeName;
+
+			if ( !health[node] )
+				health[node] = {
+					nick: data.nodeName,
+					channels: []
+				}
+		}
 
 		if ( !data.payload.type || !modules[data.payload.type] )
 			return sock.write(JSON.stringify({
@@ -178,7 +211,13 @@ var server = net.createServer(function (sock) {
 				payload: payload
 			})), sock.end();
 		})
-	})
+	});
+
+	var _reset = function () {
+		//delete health[node];
+	}
+
+	sock.on("close", _reset);
 });
 
 server.listen(8124);

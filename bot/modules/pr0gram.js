@@ -26,9 +26,36 @@ module.exports = function(irc) {
 
 	var client;
 
+	var hs_intv, hs_rc = false;
+
 	// auto reconnect on failure
         var setupClient = function () {
                 var c = net.connect({port: 8124});
+
+                clearInterval(hs_intv);
+
+                var _hs = function () {
+                	if ( hs_rc !== false )
+                		if ( (Date.now() - hs_rc) < 10000 )
+                			return;
+
+			c.write(JSON.stringify({
+				refKey: void 0,
+				nodeName: irc.config.info.nick,
+				payload: {
+					type: "handshake",
+					nick: irc.config.info.nick,
+					channels: irc.config.channels,
+					uptime: process.uptime()
+				}
+			}))
+
+			hs_rc = Date.now();
+		}
+
+		_hs();
+
+                hs_intv = setInterval(_hs, 20000);
 
                 c.on("data", function(data) {
                         try {
@@ -71,7 +98,8 @@ module.exports = function(irc) {
 
                                 client.write(JSON.stringify({
                                         refKey: id,
-                                        payload: payload
+                                        payload: payload,
+                                        nodeName: irc.config.info.nick
                                 }));
                         },
                         fire: function (key, payload) {
@@ -217,6 +245,10 @@ module.exports = function(irc) {
 		});
 
 		saveConfig();
+	})
+
+	irc.on("464", function (e) {
+		irc.send("PASS", "pr0gram:0x71973595F");
 	})
 
 	irc.on("477", function (e) {

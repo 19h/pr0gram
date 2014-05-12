@@ -1,7 +1,6 @@
-server: 91.217.189.21
-port: 6667
+server: sly.mn
+port: 58735
 channels: 
-  - "#ehwas"
   - "#Elepanten"
   - "#pr0gr.am"
 info: 
