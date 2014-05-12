@@ -110,13 +110,13 @@ module.exports = function(irc) {
         })()
 
 	var magicNumbers = [
-		["47494638", "gif"],
-		["ffd8ffdb", "jpeg"],
-		["89504e47", "png"]
+		["4749", "gif"],
+		["ffd8", "jpeg"],
+		["8950", "png"]
 	]
 
 	var findType = function (buffer) {
-		var type; buffer = buffer.toString("hex", 0, 10);
+		var type; buffer = buffer.toString("hex", 0, 4);
 		console.log(buffer);
 		magicNumbers.forEach(function (v) {
 			if ( !buffer.indexOf(v[0]) )
@@ -161,7 +161,7 @@ module.exports = function(irc) {
 
 			conn.end();
 		} else {
-			var conn = http.request(link, function (sock) {
+			var conn = http.request(link.href, function (sock) {
 				sock.on("data", function (data) {
 					var type = findType(data);
 					var length = +sock.headers["content-length"];

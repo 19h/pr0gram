@@ -8,7 +8,7 @@ info:
   user: pr0gram
   name: pr0gram
 admins: 
-  - ".+@kenansulayman.users.quakenet.org"
+  - ".+@apx.users.quakenet.org"
 bcnicks: 
   - apx
 ignore: 
