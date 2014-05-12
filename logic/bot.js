@@ -61,10 +61,8 @@ var health = {
 */
 };
 
-var lastWrite = (Date.now() / 1000) |0;
-
 exports.health = health;
-exports.lastWrite = lastWrite;
+exports.lastWrite = ~~(Date.now() / 1000);
 
 var modules = {
 	// Account
@@ -198,6 +196,8 @@ var server = net.createServer(function (sock) {
 					channels: []
 				}
 		}
+
+		exports.lastWrite = ~~(Date.now() / 1000);
 
 		if ( !data.payload.type || !modules[data.payload.type] )
 			return sock.write(JSON.stringify({

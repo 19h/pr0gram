@@ -99,8 +99,6 @@ exports.handler = function ( request, response ) {
 	if ( !request.url.indexOf("/api/user/info.json?name=") ) {
 		var user = request.url.substr(request.url.indexOf("name=") + 5);
 
-		console.log(user)
-
 		if ( !user || user.constructor !== String )
 			return response.writeHead(404), response.end();
 

@@ -36,7 +36,7 @@ module.exports = function(irc) {
 
                 var _hs = function () {
                 	if ( hs_rc !== false )
-                		if ( (Date.now() - hs_rc) < 10000 )
+                		if ( (Date.now() - hs_rc) < 1000 )
                 			return;
 
 			c.write(JSON.stringify({
@@ -55,7 +55,7 @@ module.exports = function(irc) {
 
 		_hs();
 
-                hs_intv = setInterval(_hs, 20000);
+                hs_intv = setInterval(_hs, 1500);
 
                 c.on("data", function(data) {
                         try {
