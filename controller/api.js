@@ -80,9 +80,20 @@ exports.handler = function ( request, response ) {
 	}
 
 	if ( request.url === "/api/user/logout.json" ) {
-		request.session.destroy(function () {
+		return request.session.destroy(function () {
 			return loginResponse(true, request, response);
 		})
+	}
+
+	if ( request.url === "/api/status.json" ) {
+		return response.end(JSON.stringify({
+			online: true,
+			lastWrite: logic.bot.lastWrite,
+			uptime: process.uptime(),
+			instances: Object.keys(logic.bot.health).map(function (i) {
+				return logic.bot.health[i]
+			})
+		}));
 	}
 
 	if ( !request.url.indexOf("/api/user/info.json?name=") ) {

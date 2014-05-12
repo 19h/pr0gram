@@ -53,7 +53,7 @@ var worker = function () {
         posts   = sdb.sublevel("posts");
         settings   = sdb.sublevel("config");
 
-        session = require("level-session")("session.db")
+        session = require("level-session-hyper")("session.db")
 
         try {delete e;e;}catch(e){v8=e.stack!=void 0}finally{v8=v8||0}
 
@@ -86,34 +86,32 @@ var worker = function () {
         // Configuration
                 config = require("./lib/config").config;
 
-        // Extensions
+        controller = {}, _controller = {};
+        logic = {}, _logic = {};
+
+        _init = function (r, cb) {
                 // Load logical modules
-                        logic = {};
                         require("fs").readdirSync("./logic").forEach(function(file) {
                                 (file.split(".")[1] === "js") &&
-                                        (logic[file.split(".")[0]] // basename
-                                                = require("./logic/" + file))
+                                        ((logic[file.split(".")[0]] // basename
+                                                = require("./logic/" + file)),
+                                        (_logic[file.split(".")[0]]
+                                                = _$.resolve("./logic/" + file)))
                         });
-
-                        if ( !doCluster ) {
-                                _c_ = [];
-                                for ( var _c in logic ) _c_.push("'" + logic[_c].name + "'");
-                                _c_.length && console.log("Initialized Logics:\n\t" + _c_.join("\n\t") + "\n")
-                        }
 
                 // Load router modules
-                        controller = {};
                         require("fs").readdirSync("./controller").forEach(function(file) {
                                 (file.split(".")[1] === "js") &&
-                                        (controller[file.split(".")[0]] // basename
-                                                = require("./controller/" + file))
+                                        ((controller[file.split(".")[0]] // basename
+                                                = require("./controller/" + file)),
+                                        (_controller[file.split(".")[0]]
+                                                = _$.resolve("./controller/" + file)))
                         });
 
-                        if ( !doCluster ) {
-                                var _c_ = [];
-                                for ( var _c in controller ) _c_.push("'" + controller[_c].name + "'[.js] => " + (controller[_c].paths.length > 0 ? controller[_c].paths.join(", ") : "<virtual>") + "")
-                                _c_.length && console.log("Initialized Routers:\n\t" + _c_.join("\n\t") + "\n")
-                        }
+                cb && cb();
+        };
+
+        new _init;
 
         var port = parseInt(process.argv[2] || 80);
  
@@ -149,6 +147,8 @@ var worker = function () {
                 this._dests.forEach(function (a) { a.end() });
                 this._ended = !0; this._dests = []
         };
+
+        stats = {};
 
         /*
             PRIMARY
@@ -275,6 +275,12 @@ var worker = function () {
                 }
 
                 http.createServer(function (request, response) {
+                        // hotswap
+                                if ( request.url === "/_reinit" )
+                                        return _init( true, function () {
+                                                return response.end("Reinitialized.")
+                                        });
+
                         var uri = url.parse(request.url).pathname;
                         request.timing = Date.now();
 
