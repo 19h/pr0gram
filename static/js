@@ -5699,7 +5699,7 @@ var StreamUI = function(user) {
         $('#itemButtonLike').click(this.toggleLike.bind(this));
         $('#addTagsForm').submit(this.addTags.bind(this));
         $('#qform').submit(this.search.bind(this));
-        $('#mainMenu').popOver('<a href="#status">Status</a> <a href="#faq">FAQ / API</a> <a href="#shortcuts">Keyboard Shortcuts</a>');
+        $('#mainMenu').popOver('<a href="#about">About</a> <a href="#status">Status</a> <a href="#faq">FAQ / API</a> <a href="#shortcuts">Keyboard Shortcuts</a>');
         $('#currentUserName').popOver(this.user.menu.bind(this.user));
         $('.deleteItem').click(this.deleteItem.bind(this));
         $('.editTags').click(this.editTags.bind(this));
@@ -5743,6 +5743,7 @@ var StreamUI = function(user) {
         this.resize();
         var pc = $('#pageContainer')
         this.pages = {
+                about: new Page(pc, '<div id="left"><h1>hi</h1></div><div id="right" class="elepant"><h1></h1></div>'),
                 faq: new Page(pc, '<div id="single">'
                                     + '<h1>FAQ</h1>'
                                     + '<h2>Is there anything I\'m not allowed to post here?</h2> <p>Most stuff is allowed, but there are of course a few exceptions:</p> <ul> <li>Everything you might want to post</li></ul>'
