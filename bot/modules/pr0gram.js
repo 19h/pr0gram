@@ -110,13 +110,13 @@ module.exports = function(irc) {
         })()
 
 	var magicNumbers = [
-		["4749", "gif"],
-		["ffd8", "jpeg"],
-		["8950", "png"]
+		["474946", "gif"],
+		["ffd8ff", "jpeg"],
+		["89504e", "png"]
 	]
 
 	var findType = function (buffer) {
-		var type; buffer = buffer.toString("hex", 0, 4);
+		var type; buffer = buffer.toString("hex", 0, 6);
 		console.log(buffer);
 		magicNumbers.forEach(function (v) {
 			if ( !buffer.indexOf(v[0]) )
@@ -147,42 +147,38 @@ module.exports = function(irc) {
                 if (e.text[e.text.indexOf(link.href) + link.href.length] === "?")
                 	isPrivate = true;
 
+                var _handler = function (sock) {
+			sock.on("data", function (data) {
+				var type = findType(data);
+				var length = +sock.headers["content-length"];
+
+				if (!type) return conn.abort();
+
+				irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + data.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
+
+				main.queue({
+					type: "post",
+					format: type,
+					envelope: e,
+					link: link,
+					isPrivate: isPrivate
+				}, function (data) {
+					data.notice && irc.send("privmsg", e.target, data.notice);
+				})
+
+				conn.abort()
+			})
+		}
+
                 if ( link.href.substr(0, 5) === "https" ) {
                 	link.rejectUnauthorized = false;
                 	link.requestCert = false;
-			
-			var conn = https.request(link, function (sock) {
-				sock.on("data", function (data) {
-					console.log(findType(data));
 
-					conn.abort()
-				})
-			})
+			var conn = https.request(link.href, _handler)
 
-			conn.end();
+			conn.end()
 		} else {
-			var conn = http.request(link.href, function (sock) {
-				sock.on("data", function (data) {
-					var type = findType(data);
-					var length = +sock.headers["content-length"];
-
-					if (!type) return conn.abort();
-
-					irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + data.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
-
-					main.queue({
-						type: "post",
-						format: type,
-						envelope: e,
-						link: link,
-						isPrivate: isPrivate
-					}, function (data) {
-						data.notice && irc.send("privmsg", e.target, data.notice);
-					})
-
-					conn.abort()
-				})
-			})
+			var conn = http.request(link.href, _handler)
 
 			conn.end()
 		}
