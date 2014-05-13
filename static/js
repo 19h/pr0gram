@@ -6612,17 +6612,8 @@ IEFix.prototype.check = function() {
         return true;
 };
 IEFix.prototype.showOverlay = function() {
-        $('body').prepend('<div id="iefix"> <h1>Sweet! IE6/7! After this, maybe you can go chat on AOL, you fucking dinosaur.</h1> <p> Your browser sucks. To view this site, you can either install the <a href="#" id="installChrome">Google Chrome Frame Plugin</a> or switch to a decent browser like <a href="http://www.mozilla.com/firefox/">Firefox</a>, <a href="http://www.google.com/chrome">Chrome</a> or <a href="http://www.opera.com">Opera</a>. </p> <p> Even an <a href="http://www.microsoft.com/windows/internet-explorer/">update to IE8</a> would do. But don\'t get me wrong, IE8 is still a huge piece of shit. I had to jump through many hoops to make it work and it still looks like ass. </p> <p> You can also refuse to update your browser and continue being the assclown that you have been for the last 9 fucking years. If you are indeed an assclown, feel free to visit the <a id="staticVersion" href="#">static version</a> of this site. </p> </div>');
-        $('#staticVersion').attr('href', '/static/' + document.location.href.replace(/^.*#/, ''));
+        $('body').prepend('<div id="iefix"> <h1>Your browser is a bit ancient. Please consider upgrading.</h1></div>');
         $('#page').hide();
-        $('#installChrome').click(this.installChrome.bind(this));
-};
-IEFix.prototype.installChrome = function() {
-        $('#iefix').hide();
-        $.getScript('http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js', function() {
-                CFInstall.check();
-        });
-        return false;
 };
 IEFix.prototype.fixIE8 = function() {
         $('#overlay').append('<div id="iefixListOverlay"></div>');
