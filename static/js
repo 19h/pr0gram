@@ -5046,6 +5046,7 @@ ResultSet.prototype.loadCallback = function(data) {
                 item.index = firstIndex - i;
                 this.items[firstIndex - i] = item;
         }
+        console.log(this.items)
         if (this.onLoad) {
                 this.onLoad(data.firstIndex, data.items.length);
         }
@@ -5253,7 +5254,7 @@ Stream.prototype.populateEmptyItems = function() {
                 var item = stream.resultSet.items[id];
                 if (item) {
                         var src = CONFIG.PATH.THUMBS + item.thumb;
-                        var playable = item.type != 'image' ? ' playable' : '';
+                        var playable = item.type !== 'image' ? ' playable' : '';
                         $(this).attr('class', 'thumb' + playable).html('<img class="thumb" src="' + src + '" alt=""/>');
                 }
         });
@@ -5299,6 +5300,7 @@ Stream.prototype.scrollTo = function(scroll) {
                                         var thumbClass = isInCache ? 'thumb' + (item.type != 'image' ? ' playable' : '') : 'thumb thumbEmpty';
                                         var keyword = item ? item.keyword : '';
                                         var href = this.getItemURL(i, true, keyword).escapeHTML();
+                                        //console.log(this)
                                         newItemsHTML += '<a href="' + href + '" class="' + thumbClass + '" id="' + this.thumbId + i + '">' +
                                                 (isInCache ? '<img class="thumb" src="' + CONFIG.PATH.THUMBS + item.thumb + '" alt=""/>' : '') + '</a>';
                                 }
@@ -6363,6 +6365,7 @@ Item_Image.prototype.load = function() {
                         top: 0,
                         left: 0
                 }).addClass('scaled').load(this.onLoadBound);
+                console.log(this.data)
                 this.node.attr('src', CONFIG.PATH.IMAGES + this.data.image);
                 if ($.browser.opera) {
                         $('#itemA,#itemB').css({
@@ -6653,11 +6656,11 @@ CONFIG = {
         },
         DEFAULT_AVATAR: 'anonymous.png',
         PATH: {
-                IMAGES: 'http://pr0gr.am/images/',
-                THUMBS: 'http://pr0gr.am/images/thumbs/',
+                IMAGES: /*http://pr0gr.am*/ '/images/',
+                THUMBS: /*http://pr0gr.am*/ '/images/thumbs/',
                 AVATARS: {
-                        FULL: 'http://pr0gr.am/avatars/big/',
-                        SMALL: 'http://pr0gr.am/avatars/small/'
+                        FULL: /*http://pr0gr.am*/ '/avatars/big/',
+                        SMALL: /*http://pr0gr.am*/ '/avatars/small/'
                 }
         },
         LAYOUT: {

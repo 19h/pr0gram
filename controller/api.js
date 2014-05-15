@@ -96,6 +96,12 @@ exports.handler = function ( request, response ) {
 		}));
 	}
 
+	if ( !request.url.indexOf("/api/items/get.json") ) {
+		var i = 0;
+
+		return fs.createReadStream("./blob.json").pipe(response);
+	}
+
 	if ( !request.url.indexOf("/api/user/info.json?name=") ) {
 		var user = request.url.substr(request.url.indexOf("name=") + 5);
 
