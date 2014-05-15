@@ -46,11 +46,15 @@ var worker = function () {
         db = hyper("pr0gram.db", { encoding: "json" }),
            svb = require("level-sublevel");
 
+        co = require("co");
+
+        lver = require("level-version");
+
         sdb = svb(db);
 
         users   = sdb.sublevel("users");
         ref     = sdb.sublevel("ref");
-        posts   = sdb.sublevel("posts");
+        posts   = lver(sdb.sublevel("posts"));
         settings   = sdb.sublevel("config");
 
         session = require("level-session-hyper")("session.db")

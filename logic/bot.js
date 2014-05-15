@@ -83,10 +83,10 @@ var modules = {
 		 							host: host,
 		 							nick: displayNick,
 		 							key: whirlpool(pwd),
-		 							since: Date.now(),
-		 							posts: [],
-		 							likes: [],
-		 							comments: []
+		 							since: Date.now()//,
+		 							//posts: [],
+		 							//likes: [],
+		 							//comments: []
 		 						}
 
 		 						users.put(nick, _user, function () {
@@ -160,9 +160,34 @@ var modules = {
 				users.get(_d, function (err, user) {
 					if (err) return cb({});
 
-					cb({
-						notice: "[RPC] " + JSON.stringify(user)
-					});
+					var shortname;
+
+					try {
+						console.log(envelope)
+						shortname = envelope.link.path.split("/").pop().split(".").shift();
+					} catch(e) {
+						return cb({
+							notice: "Unknown error"
+						});
+					}
+
+					posts.put("all", {
+						user: envelope.envelope.user,
+						title: shortname,
+						channel: {
+							name: envelope.envelope.target
+						},
+						created: (Date.now()/1000)|0,
+						image: "lawl.png",
+						thumb: "lawl.png",
+						source: envelope.link.href,
+						type: "image",
+						keyword: false
+					}, function () {
+						cb({
+							notice: "[RPC] " + JSON.stringify(user)
+						});
+					})
 				});
 			});
 
