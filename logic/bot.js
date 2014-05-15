@@ -1,5 +1,50 @@
 var whirlpool = function (p) {
 	return crypto.createHash("whirlpool").update(p).digest("hex");
+};
+
+var ripe = function (p) {
+	return crypto.createHash("ripemd").update(p).digest("hex");
+}
+
+var _cropImage_stream = function(streamIn, w, h) {
+        var command = 'convert';
+
+        var args = [
+                "-", // use stdin
+                "-resize", w + "x", // resize width to 640
+                "-gravity", "center", // sets the offset to the center
+                "-crop", w + "x" + h + "+0+0", // crop
+                "+repage", // reset the virtual canvas meta-data from the images.
+                "-" // output to stdout
+        ];
+
+        var proc = childProcess.spawn(command, args);
+
+        var stream = new Stream();
+
+        proc.stderr.on('data', new Function("return true"));
+        proc.stdout.on('data', stream.emit.bind(stream, 'data'));
+        proc.stdout.on('end', stream.emit.bind(stream, 'end'));
+        proc.on('error', new Function("return true"));
+
+        if (streamIn instanceof Buffer) {
+                proc.stdin.write(streamIn);
+                proc.stdin.emit("end");
+        } else {
+                streamIn.pipe(proc.stdin);
+        }
+
+        return stream;
+};
+
+var _uuid = function () {
+	var _seed = process.hrtime();
+	_seed = _seed[0] + 1E9 * _seed[1];
+	return Math.random() + _seed
+};
+
+var uuid = function () {
+	return ripe(String(_uuid()));
 }
 
 var pInc = (function(db) {
@@ -50,7 +95,12 @@ settings.get("lastPost", function (err, p) {
 	postIterator = p | 0
 })
 
-pInc("lastPost");
+var incAndUpdate = function (cb) {
+	var k = postIterator++;
+	settings.put("lastPost", k + "", function () {
+		cb(k)
+	})
+}
 
 var health = {
 /*	node: {
@@ -163,7 +213,6 @@ var modules = {
 					var shortname;
 
 					try {
-						console.log(envelope)
 						shortname = envelope.link.path.split("/").pop().split(".").shift();
 					} catch(e) {
 						return cb({
@@ -171,23 +220,43 @@ var modules = {
 						});
 					}
 
-					posts.put("all", {
-						user: envelope.envelope.user,
-						title: shortname,
-						channel: {
-							name: envelope.envelope.target
-						},
-						created: (Date.now()/1000)|0,
-						image: "lawl.png",
-						thumb: "lawl.png",
-						source: envelope.link.href,
-						type: "image",
-						keyword: false
-					}, function () {
-						cb({
-							notice: "[RPC] " + JSON.stringify(user)
-						});
-					})
+					var ext = envelope.link.href.split(".").pop();
+
+					var image = uuid();
+					var thumb = uuid();
+
+					var r = request({
+					        uri: envelope.link.href,
+					        strictSSL: false
+					}), r2 = request({
+					        uri: envelope.link.href,
+					        strictSSL: false
+					});
+
+					_cropImage_stream(r, 128, 128).pipe(fs.createWriteStream("./static/images/thumbs/" + thumb + "." + ext));
+					r2.pipe(fs.createWriteStream("./static/images/" + image + "." + ext));
+
+					incAndUpdate(function (itemId) {
+						posts.put(image, itemId);
+
+						posts.put("all", {
+							user: envelope.envelope.user,
+							title: shortname,
+							channel: {
+								name: envelope.envelope.target
+							},
+							created: (Date.now()/1000)|0,
+							image: image + "." + ext,
+							thumb: thumb + "." + ext,
+							source: envelope.link.href,
+							type: "image",
+							keyword: image
+						}, { version: itemId }, function () {
+							cb({
+								notice: "[RPC] " + JSON.stringify(user)
+							});
+						})
+					});
 				});
 			});
 

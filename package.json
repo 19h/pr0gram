@@ -19,6 +19,8 @@
             "mime": "*",
             "hyperlevel": "*",
             "level-sublevel": "*",
-            "level-session": "*"
+            "level-session": "*",
+            "request": "*",
+            "co": "*"
       }
 }

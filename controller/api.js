@@ -101,11 +101,16 @@
 		if ( !request.url.indexOf("/api/items/get.json") ) {
 			var i = 0;
 
+			var queries = qs.parse(request.url.split("/api/items/get.json")[1].substr(1));
+
+			console.log(queries)
+
 			var retval = {
 				firstIndex: false,
 				maxId: false,
 				items: [],
-				total: false
+				total: false,
+				totalKnown: true
 			};
 
 			return posts.createVersionStream("all").on("data", function (post) {
@@ -118,14 +123,11 @@
 
 				post.value.index = post.version;
 
-				post.value.keyword = "yolo";
 				post.value.channel.keyword = "yolo";
 
-				post.value.image = "lawl.png";
-				post.value.thumb = "lawl.png";
-				post.value.type = "image";
+				//post.value.image = "lawl.png";
+				//post.value.thumb = "lawl.png";
 				post.value.tags = ["yolo", "swag"];
-				post.value.keyword = "yoloswag";
 
 				retval.items.push(post.value);
 

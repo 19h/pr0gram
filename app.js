@@ -36,6 +36,7 @@ var worker = function () {
         net = require("net"),
         path = require("path"),
         qs = require("querystring"),
+        Stream = require("stream"),
         url = require("url"),
         util = require("util"),
         repl = require("repl"),
@@ -58,6 +59,8 @@ var worker = function () {
         settings   = sdb.sublevel("config");
 
         session = require("level-session-hyper")("session.db")
+
+        request = require("request");
 
         try {delete e;e;}catch(e){v8=e.stack!=void 0}finally{v8=v8||0}
 
