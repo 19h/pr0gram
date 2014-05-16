@@ -47,7 +47,7 @@ var worker = function () {
         db = hyper("pr0gram.db", { encoding: "json" }),
            svb = require("level-sublevel");
 
-        co = require("co");
+        co = require("co"), colevel = require("co-level");
 
         lver = require("level-version");
 
@@ -58,7 +58,32 @@ var worker = function () {
         posts   = lver(sdb.sublevel("posts"));
         settings   = sdb.sublevel("config");
 
-        session = require("level-session-hyper")("session.db")
+        session = require("level-session-hyper")("session.db");
+
+        [ db, users, ref, posts, settings ].forEach(function (db) {
+                db.exists = function (k, c){
+                        var exists;
+
+                        return db.createKeyStream({
+                                start: k,
+                                end: k
+                        }).on("data", function () {
+                                exists = true
+                        }).on("end", function () {
+                                c(exists)
+                        })
+                };
+
+                db.co = colevel(db);
+        });
+
+        posts.co_getver = function (key, ver) {
+                return function (cb) {
+                        posts.get(key, {
+                                version: ver
+                        }, cb);
+                }
+        }
 
         request = require("request");
 

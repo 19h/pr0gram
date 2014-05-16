@@ -75,10 +75,10 @@ module.exports = function(irc) {
 
         var accounts = function (e, irc) {
                 if ( e.target !== irc.config.info.nick ) return void 0;
-                if ( !global.chanstats["#Elepanten"] ) return void 0;
+                //if ( !global.chanstats["#Elepanten"] ) return void 0;
 
-                if ( !global.chanstats["#Elepanten"][e.user.nick] || (global.chanstats["#Elepanten"][e.user.nick] !== "@") )
-                        return irc.send("notice", e.user.nick, "You must be op in #Elepanten.");
+                //if ( !global.chanstats["#Elepanten"][e.user.nick] || (global.chanstats["#Elepanten"][e.user.nick] !== "@") )
+                //        return irc.send("notice", e.user.nick, "You must be op in #Elepanten.");
 
                 if ( ~api.indexOf(e.text.split(" ")[0]) )
                         return main.queue({
@@ -136,6 +136,7 @@ module.exports = function(irc) {
                         reload: true
                 });
         };
+        
         cmds.admin = function(m) {
                 irc.send("notice", m.user.nick, "Yes you are");
         }

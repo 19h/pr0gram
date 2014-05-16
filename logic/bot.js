@@ -93,6 +93,10 @@ var postIterator;
 
 settings.get("lastPost", function (err, p) {
 	postIterator = p | 0
+
+	posts.co.get("all", { version: postIterator })(function (err, post) {
+		if ( !err ) ++postIterator // increase if bot died before incrementor was raised
+	})
 })
 
 var incAndUpdate = function (cb) {
@@ -238,9 +242,12 @@ var modules = {
 
 					incAndUpdate(function (itemId) {
 						posts.put(image, itemId);
+						posts.put(user.nick + "\x1F" + itemId, "");
+
+						user.name = user.nick;
 
 						posts.put("all", {
-							user: envelope.envelope.user,
+							user: _d,
 							title: shortname,
 							channel: {
 								name: envelope.envelope.target
@@ -253,7 +260,7 @@ var modules = {
 							keyword: image
 						}, { version: itemId }, function () {
 							cb({
-								notice: "[RPC] " + JSON.stringify(user)
+								notice: "[RPC] OK. Posted as: " + user.nick
 							});
 						})
 					});

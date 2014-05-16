@@ -202,12 +202,12 @@ module.exports = function(irc) {
 	// yup, should be global
 	global.chanstats = {};
 
-	irc.on("353", function (e) {
+	/*irc.on("353", function (e) {
 		var target = e.params[2];
 
 		var nicks = {};
 
-		e.text.split(" ").forEach(function (nick) {
+		e.text && e.text.split(" ").forEach(function (nick) {
 			if ( nick[0] === "@" ) return nicks[nick.substr(1)] = "@";
 			if ( nick[0] === "+" ) return nicks[nick.substr(1)] = "+";
 
@@ -215,7 +215,7 @@ module.exports = function(irc) {
 		})
 
 		global.chanstats[target] = nicks;
-	})
+	})*/
 
 	irc.on("part", function (e) {
 		if ( e.user.nick === irc.config.info.nick ) return void 0;
