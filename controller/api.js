@@ -122,6 +122,7 @@
 				retval.maxId = post.version;
 
 				post.value.index = post.version;
+				post.value.id    = post.version;
 
 				post.value.channel.keyword = "yolo";
 
