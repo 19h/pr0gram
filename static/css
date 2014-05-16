@@ -471,6 +471,8 @@ object.video {
 	left: 0;
 	top: 0;
 	width: 50%;
+	margin-top: 20px;
+	margin-left: 20px;
 }
 
 #pageContainer #right {

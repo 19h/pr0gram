@@ -248,11 +248,11 @@ console.log(_d.key, whirlpool(data.password))
 				var buildResponse = function () {
 					return response.end(JSON.stringify({
 						user: {
-							"name": _d.displayNick,
-							"avatar": user + ".jpg",
-							"registered": 1393205487193,
-							"admin": _d.admin || false,
-							"banned": _d.banned || false
+							name: _d.displayNick,
+							avatar: user + ".jpg",
+							registered: 1393205487193,
+							admin: _d.admin || false,
+							banned: _d.banned || false
 						},
 						comments: [],//_d.comments,
 						commentCount: 0,//_d.comments.length,
