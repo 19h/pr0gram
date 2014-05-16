@@ -17,3 +17,5 @@ node_modules
 pr0gram.db
 sessions.db
 session.db
+
+static/images/
