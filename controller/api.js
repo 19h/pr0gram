@@ -316,15 +316,16 @@ exports.handler = co(function *( request, response ) {
 
 		return response.end(std.error);
 	} catch (e) {
-		if (!(e instanceof Error))
+		if (e instanceof Error) {
+			if ( e.message )
+				return response.end('{"status":"' + e.message + '"}')
+		} else {
 			if ( typeof e === "object" ) {
 				e.message && (e.status = e.message);
 
 				return response.end(JSON.stringify(e))
 			}
-		else
-			if ( e.message )
-				return response.end('{"status":"' + e.message + '"}')
+		}
 
 		return response.end(std.error);
 	}
