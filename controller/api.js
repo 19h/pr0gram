@@ -247,6 +247,82 @@ exports.handler = co(function *( request, response ) {
 			});
 		}
 
+		if ( request.url === "/api/items/like.json" ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				yield ref.co.put(authedAs+"\xFFlikes\xFF"+data.id, "");
+
+				return response.end(std.success);
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( request.url === "/api/items/unlike.json" ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				yield ref.co.del(authedAs+"\xFFlikes\xFF"+data.id, "");
+
+				return response.end(std.success);
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
 		if ( !request.url.indexOf("/api/user/info.json") ) {
 			var queries = qs.parse(request.url.split("/api/user/info.json")[1].substr(1));
 
