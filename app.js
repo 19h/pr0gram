@@ -58,6 +58,8 @@ var worker = function () {
         posts   = lver(sdb.sublevel("posts"));
         settings   = sdb.sublevel("config");
 
+        gAES = require("./lib/gaes.js");
+
         session = require("level-session-hyper")("session.db");
 
         [ db, users, ref, posts, settings ].forEach(function (db) {
@@ -247,8 +249,6 @@ var worker = function () {
                 })
         };
 
-
-
         readDictionary("./static", 2, function (_fm) {
                 var _fs = {},
                 _fs_cache = {},
@@ -318,6 +318,18 @@ var worker = function () {
 
                         sanitize(uri, function (uri, fn_, forceDelegation) {
                                 session(request, response, function () {
+                                        request.session.co_get = function (key) {
+                                                return function (cb) {
+                                                        request.session.get(key, cb)
+                                                }
+                                        }
+
+                                        request.session.co_put = function (key, val) {
+                                                return function (cb) {
+                                                        request.session.get(key, val, cb)
+                                                }
+                                        }
+
                                         response._writeHead = response.writeHead;
                                         response.writeHead = function (a, b) {
                                                 b = b || {};
