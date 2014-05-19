@@ -5826,7 +5826,7 @@
 
 		this.pageAboutCompiler = function () {
 			return '<div id="left">'
-					+ '<h1>Acknowledgements</h1>'
+					+ '<h1 style="margin-bottom: -20px;">Acknowledgements</h1>'
 					+ "<h2>Philosophy</h2>"
 					+ [
 						'<pre>',
@@ -6968,7 +6968,7 @@
 		    '<div class="hint"> Lost your password? See the <a href="#faq">FAQ</a>. </div>',
 		'</form>',
 		'<div class="infobar" id="menu">',
-		    '<h1 id="logoHead"> <a id="logo" href="#newest/*">pr0gr.am<span class="dot">&nbsp;&mdash;&nbsp;</span><span class="com">Elepanten</span><span class="dot">&nbsp;&mdash;&nbsp;</span>Random tards from pr0gramm.com</a ><a id="mainMenu" href="#" class="popover" title="menu"></a> </h1>',
+		    '<h1 id="logoHead"><a id="logo" href="#newest/*"><img src="se.png"/></a><!--<a id="logo" href="#newest/*">pr0gr<span class="dot">.</span><span class="com">am</span></a>--><a id="mainMenu" href="#" class="popover" title="menu"></a> </h1>',
 		    '<div id="currentUser">',
 			'<div class="loggedIn"> Hello <a href="#" id="currentUserName" class="popover">anonymous</a> </div>',
 			'<div class="loggedOut"> <a href="#" id="login">login</a> / <a href="#join" id="join">join</a> </div>',
@@ -6978,7 +6978,7 @@
 		    '<div id="pagePosition">Page <span id="currentPage">0</span> of <span id="totalPages">0</span></div>',
 		    '<div id="itemPosition">Item <span id="currentItem">0</span> of <span id="totalItems">0</span></div>',
 		    '<div id="itemInfo">',
-			'<div class="itemButton" id="itemButtonComments" title="Comments [C]"><span>6</span></div>',
+			'<div class="itemButton" id="itemButtonComments" title="Comments [C]"><span>0</span></div>',
 			'<div class="itemButton" id="itemButtonLike" title="Like [L]"><span>LIKE</span></div>',
 			'<img alt="" class="avatar" id="itemUserAvatar" src="/data/avatars/40/anonymous.png"/> ',
 			'<div class="infoText"> <span id="itemTitle"></span> // <a id="itemSource" class="external" href="#"></a> <a href="#" id="itemGoogleSearch" title="Reverse Image Search on Google">g</a> </div>',
