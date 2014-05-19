@@ -137,7 +137,9 @@ exports.handler = co(function *( request, response ) {
 				} catch(e) {
 					return loginResponse(false, request, response)
 				}
-console.log(_d.key, whirlpool(data.password))
+
+				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
+
 				if ( whirlpool(data.password) !== _d.key ) {
 					return loginResponse(false, request, response);
 				} else {
@@ -181,7 +183,23 @@ console.log(_d.key, whirlpool(data.password))
 
 			var queries = qs.parse(request.url.split("/api/items/get.json")[1].substr(1));
 
-			console.log(queries)
+			yield objAssert(queries, [
+				"q", "sort", "count"
+			]);
+
+			if ( !isNaN(queries.count) ) {
+				var count = queries.count | 0;
+
+				if ( (count & 0xFF) !== count ) {
+					throw {
+						status: "Assertion error: amount & 0xFF !== amount"
+					}
+				}
+			} else {
+				throw {
+					status: "Assertion error: typeof amount !== 'number(value)'"
+				}
+			}
 
 			var retval = {
 				firstIndex: false,
@@ -192,7 +210,9 @@ console.log(_d.key, whirlpool(data.password))
 				totalKnown: true
 			};
 
-			return posts.createVersionStream("all").on("data", function (post) {
+			return posts.createVersionStream("all", {
+				limit: count
+			}).on("data", function (post) {
 				retval.total = retval.total + 1;
 
 				if ( retval.firstIndex === false )
@@ -230,8 +250,14 @@ console.log(_d.key, whirlpool(data.password))
 			});
 		}
 
-		if ( !request.url.indexOf("/api/user/info.json?name=") ) {
-			var user = request.url.substr(request.url.indexOf("name=") + 5);
+		if ( !request.url.indexOf("/api/user/info.json") ) {
+			var queries = qs.parse(request.url.split("/api/user/info.json")[1].substr(1));
+
+			yield objAssert(queries, [
+				"name"
+			]);
+
+			var user = queries.name;
 
 			if ( !user || user.constructor !== String )
 				return response.writeHead(404), response.end();
@@ -241,14 +267,14 @@ console.log(_d.key, whirlpool(data.password))
 			return users.get(user, function (err, _d) {
 				if (err) return response.writeHead(404), response.end();
 
-				var now = Date.now();
+				var now = Date.now(), items = [];
 
-				var items = [];
+				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
 
 				var buildResponse = function () {
 					return response.end(JSON.stringify({
 						user: {
-							name: _d.displayNick,
+							name: _d.nick,
 							avatar: user + ".jpg",
 							registered: 1393205487193,
 							admin: _d.admin || false,
