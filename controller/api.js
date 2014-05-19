@@ -364,7 +364,6 @@ exports.handler = co(function *( request, response ) {
 					return response.end(JSON.stringify({
 						user: {
 							name: _d.nick,
-							avatar: user + ".jpg",
 							registered: 1393205487193,
 							admin: _d.admin || false,
 							banned: _d.banned || false

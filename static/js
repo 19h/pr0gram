@@ -4823,7 +4823,7 @@ console["clear"].bind(console)();
 			var comment = comments[i];
 			var content = comment.content.escapeHTML().urlsToHTML().newlineToHTML();
 			comment.date = new Date(comment.created * 1000);
-			html += '<div class="comment" id="comment' + comment.id + '">' + '<img class="avatar" src="' + CONFIG.PATH.AVATARS.SMALL + comment.avatar + '" alt=""/>' + '<div class="head">' + '<a href="#user/' + comment.name + '" class="user popover' + (comment.admin ? ' flagA' : '') + '">' + comment.name + '</a> ' + '<span class="time" title="' + comment.date.readableTime() + '">' +
+			html += '<div class="comment" id="comment' + comment.id + '"><div class="head">' + '<a href="#user/' + comment.name + '" class="user popover' + (comment.admin ? ' flagA' : '') + '">' + comment.name + '</a> ' + '<span class="time" title="' + comment.date.readableTime() + '">' +
 				comment.date.relativeTime(true) + '</span>' + '<a href="#" class="admin delete deleteComment">x</a>' + '</div>' + '<div class="content">' + content + '</div>' + '</div>';
 		}
 		if (comments.length > 0) {
@@ -5588,11 +5588,6 @@ console["clear"].bind(console)();
 		Page.prototype.show.call(this);
 	};
 	Page_Settings.prototype.showNow = function(data) {
-		if (!data.avatar) {
-			document.location = '#';
-			user.refresh();
-			return;
-		}
 		data.submitted = data.submitted || false;
 		data.errors = data.errors || {};
 		Page.prototype.showNow.call(this, data);
@@ -5602,8 +5597,6 @@ console["clear"].bind(console)();
 			this.container.find('.submitNotice').hide();
 		}
 		this.container.find('#passwordForm').submit(this.submit.bind(this));
-		this.container.find('#generateAvatar').click(this.generateAvatar.bind(this));
-		this.container.find('#uploadAvatar').change(this.uploadAvatar.bind(this));
 	};
 	Page_Settings.prototype.submit = function(ev) {
 		this.container.find('.notice').hide();
@@ -5611,40 +5604,6 @@ console["clear"].bind(console)();
 		var data = $(ev.target).serialize();
 		$.postJSON('/api/user/changepassword.json', data, this.showNow.bind(this));
 		return false;
-	};
-	Page_Settings.prototype.generateAvatar = function(ev) {
-		$.postJSON('/api/user/generateavatar.json', {
-			post: true
-		}, this.newAvatarCallback.bind(this));
-		this.container.find('.notice, .warn').hide();
-		this.container.find('.generatingAvatar').show();
-	};
-	Page_Settings.prototype.uploadAvatar = function(ev) {
-		var that = this;
-		$.ajaxFileUpload({
-			url: '/api/user/uploadavatar.json',
-			secureuri: false,
-			fileElementId: 'uploadAvatar',
-			dataType: 'json',
-			success: this.newAvatarCallback.bind(this),
-			error: function(data, status, e) {
-				that.newAvatarCallback(null);
-			}
-		});
-		this.container.find('.notice, .warn').hide();
-		this.container.find('.uploadingAvatar').show();
-		this.container.find('#uploadAvatar').replaceWith(this.container.find('#uploadAvatar').parent().html())
-		this.container.find('#uploadAvatar').change(this.uploadAvatar.bind(this));
-	};
-	Page_Settings.prototype.newAvatarCallback = function(data) {
-		this.container.find('.notice, .warn').hide();
-		if (data && data.success) {
-			user.avatar = data.avatar;
-			user.saveCookie();
-			this.container.find('#settingsAvatar').attr('src', CONFIG.PATH.AVATARS.FULL + user.avatar + '?' + Math.random());
-		} else {
-			this.container.find('.uploadingAvatarFailed').show();
-		}
 	};
 	var Page_Join = function(container, template, data) {
 		Page.call(this, container, template, data);
@@ -5925,7 +5884,7 @@ console["clear"].bind(console)();
 				}
 				p.push('', user.name, '</h1> <div class="userstats"> ');
 				var registered = (new Date(user.registered * 1000));
-				p.push(' <img src="', CONFIG.PATH.AVATARS.FULL + user.avatar, '" class="profileavatar" onerror="$(this).hide()"/> <div class="userstat"><div>', uploadCount, '</div> Uploads</div> <div class="userstat"><div>', commentCount, '</div> Comments</div> <div class="userstat"><div>', likeCount, '</div> Likes</div> <div class="userstat"><div>', tagCount, '</div> Tags</div> <div class="userstat wide"> <div title="', registered.readableTime(), '">', registered.elapsedTime(), '</div> Time wasted </div> </div> <div style="clear:both;"></div> <h2>Latest Comments</h2> ');
+				p.push('<div class="userstat"><div>', uploadCount, '</div> Uploads</div> <div class="userstat"><div>', commentCount, '</div> Comments</div> <div class="userstat"><div>', likeCount, '</div> Likes</div> <div class="userstat"><div>', tagCount, '</div> Tags</div> <div class="userstat wide"> <div title="', registered.readableTime(), '">', registered.elapsedTime(), '</div> Time wasted </div> </div> <div style="clear:both;"></div> <h2>Latest Comments</h2> ');
 				for (var i = 0; i < comments.length; i++) {
 					var c = comments[i];
 					p.push(' ');
@@ -6443,11 +6402,9 @@ console["clear"].bind(console)();
 		if (this.data.user.name) {
 			$('#itemNick').hide();
 			$('#itemUser').show().toggleClass('flagA', !! this.data.user.admin).text(this.data.user.name).attr('href', '/#user/' + this.data.user.name).popOver(User.buildSearchLinks);
-			$('#itemUserAvatar').attr('src', CONFIG.PATH.AVATARS.SMALL + this.data.user.avatar);
 		} else {
 			$('#itemUser').hide();
 			$('#itemNick').show().text(this.data.user.nick);
-			$('#itemUserAvatar').attr('src', CONFIG.PATH.AVATARS.SMALL + CONFIG.DEFAULT_AVATAR);
 		}
 		$('#itemChannel').text(this.data.channel.name).attr('href', '/#newest/channel:' + this.data.channel.keyword);
 		$('#itemSource').text(this.data.source.hostName()).attr('href', this.data.source);
@@ -6493,7 +6450,7 @@ console["clear"].bind(console)();
 			var tag = data.tags[i];
 			tag.date = new Date(tag.created * 1000);
 			html += '<div class="editTag">' + '<label><input type="checkbox" name="tag_' + tag.id + '"/>' +
-				tag.tag.escapeHTML() + '</label>' + '<img src="' + CONFIG.PATH.AVATARS.SMALL + tag.avatar + '" onerror="$(this).hide()" alt=""/>' + '<a href="#user/' + tag.name + '" class="user popover">' + tag.name + '</a> ' + '<span class="time" title="' + tag.date.readableTime() + '">' +
+				tag.tag.escapeHTML() + '</label>''<a href="#user/' + tag.name + '" class="user popover">' + tag.name + '</a> ' + '<span class="time" title="' + tag.date.readableTime() + '">' +
 				tag.date.relativeTime(true) + '</span>' + '</div>';
 		}
 		$('#adminEditTagsList').html(html).find('.user').popOver(User.buildSearchLinks);;
@@ -6847,14 +6804,9 @@ console["clear"].bind(console)();
 			NAME: 'me',
 			EXPIRE: 3650
 		},
-		DEFAULT_AVATAR: 'anonymous.png',
 		PATH: {
 			IMAGES: /*http://pr0gr.am*/ '/images/',
 			THUMBS: /*http://pr0gr.am*/ '/images/thumbs/',
-			AVATARS: {
-				FULL: /*http://pr0gr.am*/ '/avatars/big/',
-				SMALL: /*http://pr0gr.am*/ '/avatars/small/'
-			}
 		},
 		LAYOUT: {
 			ITEM: {
@@ -6966,7 +6918,6 @@ console["clear"].bind(console)();
 		    '<div id="itemInfo">',
 			'<div class="itemButton" id="itemButtonComments" title="Comments [C]"><span>0</span></div>',
 			'<div class="itemButton" id="itemButtonLike" title="Like [L]"><span>LIKE</span></div>',
-			'<img alt="" class="avatar" onerror="$(this).hide()" id="itemUserAvatar" src="/data/avatars/40/anonymous.png"/> ',
 			'<div class="infoText"> <span id="itemTitle"></span> // <a id="itemSource" class="external" href="#"></a> <a href="#" id="itemGoogleSearch" title="Reverse Image Search on Google">g</a> </div>',
 			'<div class="infoText"> <span id="itemTime"></span> by <span id="itemNick"></span><a id="itemUser" href="#" class="popover"></a> on <a id="itemChannel" href="#"></a> <a href="#" class="admin delete deleteItem">x</a> </div>',
 		    '</div>',
