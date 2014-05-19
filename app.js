@@ -87,6 +87,14 @@ var worker = function () {
                 }
         }
 
+        posts.co_putver = function (key, ver) {
+                return function (cb) {
+                        posts.put(key, {
+                                version: ver
+                        }, cb);
+                }
+        }
+
         request = require("request");
 
         try {delete e;e;}catch(e){v8=e.stack!=void 0}finally{v8=v8||0}
