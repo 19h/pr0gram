@@ -190,11 +190,8 @@ exports.handler = co(function *( request, response ) {
 			if ( !isNaN(queries.count) ) {
 				var count = queries.count | 0;
 
-				if ( (count & 0xFF) !== count ) {
-					throw {
-						status: "Assertion error: amount & 0xFF !== amount"
-					}
-				}
+				if ( (count & 0xFF) !== count )
+					count = 255;
 			} else {
 				throw {
 					status: "Assertion error: typeof amount !== 'number(value)'"
