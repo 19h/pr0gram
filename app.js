@@ -55,6 +55,7 @@ var worker = function () {
 
         users   = sdb.sublevel("users");
         ref     = sdb.sublevel("ref");
+        vref = lver(ref);
         posts   = lver(sdb.sublevel("posts"));
         settings   = sdb.sublevel("config");
 
@@ -79,21 +80,23 @@ var worker = function () {
                 db.co = colevel(db);
         });
 
-        posts.co_getver = function (key, ver) {
-                return function (cb) {
-                        posts.get(key, {
-                                version: ver
-                        }, cb);
+        [ vref, posts ].forEach(function (db) {
+                db.co_getver = function (key, ver) {
+                        return function (cb) {
+                            posts.get(key, {
+                                    version: ver
+                            }, cb);
+                        }
                 }
-        }
 
-        posts.co_putver = function (key, ver) {
-                return function (cb) {
-                        posts.put(key, {
-                                version: ver
-                        }, cb);
+                db.co_putver = function (key, val, ver) {
+                        return function (cb) {
+                            posts.put(key, val, {
+                                    version: ver
+                            }, cb);
+                        }
                 }
-        }
+        });
 
         request = require("request");
 

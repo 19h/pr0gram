@@ -185,14 +185,14 @@ exports.handler = co(function *( request, response ) {
 		if ( !request.url.indexOf("/api/items/get.json") ) {
 			var i = 0;
 
-			var queries = qs.parse(request.url.split("/api/items/get.json")[1].substr(1));
+			var data = qs.parse(request.url.split("/api/items/get.json")[1].substr(1));
 
-			yield objAssert(queries, [
+			yield objAssert(data, [
 				"q", "sort", "count"
 			]);
 
-			if ( !isNaN(queries.count) ) {
-				var count = queries.count | 0;
+			if ( !isNaN(data.count) ) {
+				var count = data.count | 0;
 
 				if ( (count & 0xFF) !== count )
 					count = 255;
@@ -228,11 +228,8 @@ exports.handler = co(function *( request, response ) {
 					post.value.id    = post.version;
 
 					post.value.channel.keyword = "yolo";
-
 					post.value.liked = false;
-
 					post.value.user.name = post.value.user.nick;
-
 					post.value.tags = [];
 
 					retval.items.push(post.value);
@@ -339,14 +336,149 @@ exports.handler = co(function *( request, response ) {
 			}
 		}
 
-		if ( !request.url.indexOf("/api/user/info.json") ) {
-			var queries = qs.parse(request.url.split("/api/user/info.json")[1].substr(1));
+		if ( !request.url.indexOf("/api/comments/get.json") ) {
+			var data = qs.parse(request.url.split("/api/comments/get.json")[1].substr(1));
 
-			yield objAssert(queries, [
+			yield objAssert(data, [
+				"id"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				var comments = [];
+
+				return vref.createVersionStream(data.id + "\xFFcomments", {
+					reverse: true
+				})
+				.on("data", function (item) {
+					item.value.id = item.version;
+					item.value.name = item.value.user;
+					delete item.value.user;
+					comments.push(item.value);
+				}).on("end", co(function *() {
+					response.end(JSON.stringify({
+						personalized: true,
+						comments: comments,
+						commentCount: comments.length
+					}))
+				}));
+
+				return response.end(std.success);
+			} catch(e) {
+				response.end(JSON.stringify({
+					personalized: true,
+					comments: [],
+					commentCount: 2
+				}))
+			}
+		}
+
+		if ( !request.url.indexOf("/api/comments/post.json") ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id", "comment"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			if ( !data.comment )
+				throw {
+					status: "Comment has to have content"
+				}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				return vref.put(data.id+"\xFFcomments", {
+					created: (Date.now() / 1000) | 0,
+					content: data.comment,
+					user: authedAs
+				}, function () {
+					return response.end(std.success);
+				});
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/comments/delete.json") ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				return vref.put(data.id+"\xFFcomments", {
+					created: (Date.now() / 1000) | 0,
+					content: data.comment,
+					user: authedAs
+				}, function () {
+					return response.end(std.success);
+				});
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/user/info.json") ) {
+			var data = qs.parse(request.url.split("/api/user/info.json")[1].substr(1));
+
+			yield objAssert(data, [
 				"name"
 			]);
 
-			var user = queries.name;
+			var user = data.name;
 
 			if ( !user || user.constructor !== String )
 				return response.writeHead(404), response.end();
@@ -368,12 +500,12 @@ exports.handler = co(function *( request, response ) {
 							admin: _d.admin || false,
 							banned: _d.banned || false
 						},
-						comments: [],//_d.comments,
-						commentCount: 0,//_d.comments.length,
-						likes: likes,//_d.likes,
-						likeCount: likes.length,//_d.likes.length,
-						uploads: items,//_d.posts,
-						uploadCount: items.length,//_d.posts.length,
+						comments: [],
+						commentCount: 0,
+						likes: likes,
+						likeCount: likes.length,
+						uploads: items,
+						uploadCount: items.length,
 						tagCount: "∆",
 						ts: now,
 						cache: false,

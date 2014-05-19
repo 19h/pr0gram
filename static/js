@@ -4801,6 +4801,8 @@ console["clear"].bind(console)();
 		this.head.hide();
 		this.comments.empty();
 
+		this.item = item;
+
 		if (item.comments && item.commentsSince && (Date.now() - item.commentsSince) < 30E3) {
 			return this.showComments(item.comments);
 		}
@@ -4872,8 +4874,10 @@ console["clear"].bind(console)();
 		var c = $(ev.target).parents('div.comment');
 		var id = c.attr('id').match(/comment(\d+)/)[1];
 		if (confirm('Delete Comment?')) {
+			console.log(this);
 			$.postJSON('/api/comments/delete.json', {
-				id: id
+				id: this.item.id,
+				version: id
 			});
 			c.hide();
 		}
@@ -4884,11 +4888,17 @@ console["clear"].bind(console)();
 		this.comments.empty();
 		this.loader.show();
 		var that = this;
+
 		$.postJSON('/api/comments/post.json', {
 			id: item.id,
 			comment: comment
 		}, function(data) {
-			that.loadCallback(data, item, true)
+			//that.loadCallback(data, item, true)
+
+			that.loader.show();
+			$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
+				that.loadCallback(data, item)
+			});
 		});
 	};
 	jQuery.postJSON = function(url, data, callback, errback) {
