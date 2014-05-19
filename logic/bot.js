@@ -242,7 +242,7 @@ var modules = {
 
 					incAndUpdate(function (itemId) {
 						posts.put(image, itemId);
-						posts.put(user.nick + "\x1F" + itemId, "");
+						posts.put(user.nick + "\xFF" + itemId, "");
 
 						user.name = user.nick;
 
