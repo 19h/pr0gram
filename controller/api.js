@@ -161,6 +161,10 @@ exports.handler = co(function *( request, response ) {
 			}
 		}
 
+		response.writeHead(200, {
+			"Content-type": "application/json; charset=utf8"
+		})
+
 		if ( request.url === "/api/user/logout.json" ) {
 			return request.session.destroy(function () {
 				return loginResponse(true, request, response);
@@ -352,7 +356,7 @@ exports.handler = co(function *( request, response ) {
 			return users.get(user, function (err, _d) {
 				if (err) return response.writeHead(404), response.end();
 
-				var now = Date.now(), items = [];
+				var now = Date.now(), items = [], likes = [];
 
 				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
 
@@ -367,8 +371,8 @@ exports.handler = co(function *( request, response ) {
 						},
 						comments: [],//_d.comments,
 						commentCount: 0,//_d.comments.length,
-						likes: [],//_d.likes,
-						likeCount: 0,//_d.likes.length,
+						likes: likes,//_d.likes,
+						likeCount: likes.length,//_d.likes.length,
 						uploads: items,//_d.posts,
 						uploadCount: items.length,//_d.posts.length,
 						tagCount: "∆",
@@ -394,7 +398,24 @@ exports.handler = co(function *( request, response ) {
 						};
 					}
 
-					buildResponse()
+					return ref.createReadStream({
+						start: user + "\xFFlikes",
+						end: user + "\xFFlikes\u9999"
+					}).on("data", function (item) {
+						likes.push(item.key.split("\xFF").pop())
+					}).on("end", co(function *() {
+						for ( var like in likes ) {
+							var obj = (yield posts.co_getver("all", likes[like])).shift();
+
+							likes[like] = {
+								idx: obj.keyword,
+								keyword: obj.keyword,
+								thumb: obj.thumb
+							};
+						}
+
+						buildResponse()
+					}));
 				}))
 			});
 		}
