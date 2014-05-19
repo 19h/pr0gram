@@ -943,7 +943,7 @@ div.loginInfo a:hover {
 	display: none;
 	background-color: #0B1725;
 	z-index: 150;
-	bottom: 144px;
+	bottom: 156px;
 }
 
 #commentHead {
@@ -1032,7 +1032,7 @@ div.comment > div.content {
 
 #tags {
 	position: absolute;
-	bottom: 56px;
+	bottom: 70px;
 	padding: 8px;
 	left: 0;
 	height: 64px;
