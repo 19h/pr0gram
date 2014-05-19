@@ -399,7 +399,7 @@ var worker = function () {
 
                                         var aE = request.headers['accept-encoding'] || "",
                                                 _resHead = {
-                                                "Content-Type": mime.lookup(fn_),
+                                                "Content-Type": mime.lookup(fn_) + "; charset=utf8",
                                                 "Cache-control": "max-age=604800",
                                                 "Expire": new Date().toString(),
                                                 "Etag": ntag
