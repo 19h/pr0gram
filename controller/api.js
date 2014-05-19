@@ -292,9 +292,9 @@ exports.handler = co(function *( request, response ) {
 
 				posts.createReadStream({
 					start: user,
-					end: user + "\xFC"
+					end: user + "\u9999"
 				}).on("data", function (item) {
-					items.push(item.key.split("\x1F").pop())
+					items.push(item.key.split("\xFF").pop())
 				}).on("end", co(function *() {
 					for ( var item in items ) {
 						var obj = (yield posts.co_getver("all", items[item])).shift();
