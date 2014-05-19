@@ -198,52 +198,64 @@ exports.handler = co(function *( request, response ) {
 				}
 			}
 
-			var retval = {
-				firstIndex: false,
-				personalized: true,
-				maxId: false,
-				items: [],
-				total: false,
-				totalKnown: true
-			};
+			return request.session.get("authedAs", function (err, authedAs) {
+				var authed = !err && authedAs;
 
-			return posts.createVersionStream("all", {
-				limit: count
-			}).on("data", function (post) {
-				retval.total = retval.total + 1;
+				var retval = {
+					firstIndex: false,
+					personalized: authed,
+					maxId: false,
+					items: [],
+					total: false,
+					totalKnown: true
+				};
 
-				if ( retval.firstIndex === false )
-					retval.firstIndex = post.version;
+				return posts.createVersionStream("all", {
+					limit: count
+				}).on("data", function (post) {
+					retval.total = retval.total + 1;
 
-				retval.maxId = post.version;
+					if ( retval.firstIndex === false )
+						retval.firstIndex = post.version;
 
-				post.value.index = post.version;
-				post.value.id    = post.version;
+					retval.maxId = post.version;
 
-				post.value.channel.keyword = "yolo";
+					post.value.index = post.version;
+					post.value.id    = post.version;
 
-				post.value.liked = false;
+					post.value.channel.keyword = "yolo";
 
-				post.value.user.name = post.value.user.nick;
+					post.value.liked = false;
 
-				//post.value.image = "lawl.png";
-				//post.value.thumb = "lawl.png";
-				post.value.tags = [];
+					post.value.user.name = post.value.user.nick;
 
-				retval.items.push(post.value);
+					post.value.tags = [];
 
-				// return fs.createReadStream("./blob.json").pipe(response);
-			}).on("end", function () {
-				for ( var item in retval.items ) {
-					if ( typeof retval.items[item].user !== "string" )
-						break;
+					retval.items.push(post.value);
+				}).on("end", co(function *() {
+					for ( var item in retval.items ) {
+						if ( typeof retval.items[item].user !== "string" )
+							break;
 
-					retval.items[item].user = {
-						name: retval.items[item].user
-					};
-				}
+						retval.items[item].user = {
+							name: retval.items[item].user
+						};
 
-				response.end(JSON.stringify(retval))
+						var liked = false;
+
+						if ( authed ) {
+							try {
+								liked = yield ref.co.get(authedAs+"\xFFlikes\xFF"+retval.items[item].id);
+
+								liked = liked === "" ? true : false;
+							} catch(e) {console.log(e)}
+						}
+
+						retval.items[item].liked = liked;
+					}
+
+					response.end(JSON.stringify(retval))
+				}));
 			});
 		}
 
