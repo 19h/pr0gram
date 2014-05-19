@@ -4800,18 +4800,30 @@ console["clear"].bind(console)();
 		this.visible = true;
 		this.head.hide();
 		this.comments.empty();
-		if (item.comments) {
-			this.showComments(item.comments);
-		} else if (item.commentCount > 0) {
-			var that = this;
-			this.loader.show();
-			$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
-				that.loadCallback(data, item)
-			});
-		} else {
-			this.loader.hide();
-			this.showComments([]);
+
+		if (item.comments && item.commentsSince && (Date.now() - item.commentsSince) < 30E3) {
+			return this.showComments(item.comments);
 		}
+
+		// else if (item.commentCount > 0) {
+		//	alert(1)
+		//	var that = this;
+		//	this.loader.show();
+		//	$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
+		//		that.loadCallback(data, item)
+		//	});
+		//} else {
+		//	this.loader.hide();
+		//	this.showComments([]);
+		//}
+
+		// Let's rape the database
+
+		var that = this;
+		this.loader.show();
+		$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
+			that.loadCallback(data, item)
+		});
 	};
 	Comments.prototype.hide = function() {
 		this.pane.sanitizedFadeOut(CONFIG.FADE_TIME);
@@ -4845,6 +4857,7 @@ console["clear"].bind(console)();
 		this.loader.hide();
 		item.comments = data.comments;
 		item.commentCount = data.comments.length;
+		item.commentsSince = Date.now();
 		this.showComments(item.comments);
 		if (fromPost) {
 			var p = this.comments.parent();
@@ -6450,7 +6463,7 @@ console["clear"].bind(console)();
 			var tag = data.tags[i];
 			tag.date = new Date(tag.created * 1000);
 			html += '<div class="editTag">' + '<label><input type="checkbox" name="tag_' + tag.id + '"/>' +
-				tag.tag.escapeHTML() + '</label>''<a href="#user/' + tag.name + '" class="user popover">' + tag.name + '</a> ' + '<span class="time" title="' + tag.date.readableTime() + '">' +
+				tag.tag.escapeHTML() + '</label><a href="#user/' + tag.name + '" class="user popover">' + tag.name + '</a> ' + '<span class="time" title="' + tag.date.readableTime() + '">' +
 				tag.date.relativeTime(true) + '</span>' + '</div>';
 		}
 		$('#adminEditTagsList').html(html).find('.user').popOver(User.buildSearchLinks);;
