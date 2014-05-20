@@ -313,9 +313,11 @@ var modules = {
 
 										var convert = childProcess.spawn('/usr/local/bin/convert', [source + '[0]', tmpid]);
 
-										convert.on('close', function (code) {
+										return convert.on('close', function (code) {
 											_default (tmpid, true);
 										});
+									} else {
+										return _default();
 									}
 								});
 							});
