@@ -310,15 +310,18 @@ var server = net.createServer(function (sock) {
 			return sock.write(JSON.stringify({
 				refKey: data.refKey,
 				payload: payload
-			})), sock.end();
+			}));
 		})
 	});
 
 	var _reset = function () {
-		//delete health[node];
+		delete health[node];
 	}
 
 	sock.on("close", _reset);
+	sock.on("timeout", _reset);
+	sock.on("error", _reset);
+	sock.on("disconnect", _reset);
 });
 
 server.listen(8124);

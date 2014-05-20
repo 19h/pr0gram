@@ -14,6 +14,8 @@ var Config = require("./lib/config.js");
 
 var configFile = path.resolve(process.cwd(), args._[0] || "config.yaml");
 
+Error.stackTraceLimit = Infinity;
+
 function connection(config) {
         var irc = ircee(),
                 self = new EventEmitter();

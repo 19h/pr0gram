@@ -1,3 +1,11 @@
+var net = require("net"),
+    url = require("url");
+
+var http = require("http"),
+   https = require("https");
+
+var crypto = require("crypto");
+
 module.exports = function(irc) {
 	var isIgnoredUser = module.exports.isIgnoredUser = function(address) {
 		var _ref;
@@ -16,20 +24,19 @@ module.exports = function(irc) {
                 });
         }
 
-	var net = require("net"),
-	    url = require("url");
-
-	var http = require("http"),
-	   https = require("https");
-
-	var crypto = require("crypto");
-
 	var client;
 
 	var hs_intv, hs_rc = false;
+	var i = 0;
+
+	var isConnected = false;
 
 	// auto reconnect on failure
         var setupClient = function () {
+        	if ( isConnected ) return false;
+
+        	console.log("<bot-pr0gram:" + ++i + "> RPC is connecting..")
+
                 var c = net.connect({port: 8124});
 
                 clearInterval(hs_intv);
@@ -57,6 +64,11 @@ module.exports = function(irc) {
 
                 hs_intv = setInterval(_hs, 1500);
 
+                c.on("connect", function () {
+                	isConnected = true;
+                	console.log("<bot-pr0gram:" + i + "> RPC is connected!")
+                })
+
                 c.on("data", function(data) {
                         try {
                                 data = JSON.parse(data)
@@ -66,29 +78,38 @@ module.exports = function(irc) {
                                 return void 0;
 
                         main.fire(data.refKey, data.payload);
-                        
-                        c.end();
                 });
 
                 c.on("end", function() {
-                        setImmediate(function () {
-                                client = setupClient();
-                        });
+                	isConnected = false;
+                	console.log("<bot-pr0gram:" + i + "> RPC was disconnected! end")
+                        setTimeout(setupClient, 500);
                 });
 
                 c.on("disconnect", function (){
-                        setImmediate(function () {
-                                client = setupClient();
-                        });
+                	isConnected = false;
+                	console.log("<bot-pr0gram:" + i + "> RPC was disconnected! disconnect")
+                        setTimeout(setupClient, 500);
                 });
 
-                return c
+                c.on("error", function (){
+                	isConnected = false;
+                	console.log("<bot-pr0gram:" + i + "> RPC was disconnected! error")
+                        setTimeout(setupClient, 500);
+                });
+
+                client = c, global.client = c
         }
 
-        client = setupClient();
+        setupClient();
 
         var main = (function () {
                 var queue = {};
+
+                setInterval(function () {
+                	queue.length &&
+                		console.log(queue);
+              	}, 1000)
 
                 return {
                         queue: function (payload, cb) {
@@ -244,7 +265,7 @@ module.exports = function(irc) {
 	})
 
 	irc.on("464", function (e) {
-		irc.send("PASS", "pr0gram:0x71973595F");
+		irc.send("PASS", "pr0gram:0x832040F");
 	})
 
 	irc.on("477", function (e) {

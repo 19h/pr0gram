@@ -1,4 +1,18 @@
+var net = require("net"),
+    url = require("url");
+
+var http = require("http"),
+   https = require("https");
+
+var crypto = require("crypto");
+
 module.exports = function(irc) {
+	// wait for client to load
+        if ( !global.client )
+                return setTimeout(function () {
+                    module.exports(irc)
+                }, 50);
+
         var admins = irc.config.admins || [];
 
         var isAdmin = exports.isAdmin = function isAdmin(address) {
@@ -10,66 +24,28 @@ module.exports = function(irc) {
 
         var cmdchar = irc.config.chmdchar || ">";
 
-        // server relay
-                var net = require("net"),
-                crypto = require("crypto");
+        var client = global.client;
 
-                var client;
+        var main = (function () {
+                var queue = {};
 
-                // auto reconnect on failure
-                var setupClient = function () {
-                        var c = net.connect({port: 8124});
+                return {
+                        queue: function (payload, cb) {
+                                var id = crypto.createHash("whirlpool").update(Math.random() + Date.now() + "").digest("hex");
 
-                        c.on("data", function(data) {
-                                try {
-                                        data = JSON.parse(data)
-                                } catch (e) { return void 0 }
+                                queue[id] = cb;
 
-                                if ( !data.refKey || ( !data.payload && data.payload !== "" ) )
-                                        return void 0;
-
-                                main.fire(data.refKey, data.payload);
-
-                                c.end();
-                        });
-
-                        c.on("end", function() {
-                                setImmediate(function () {
-                                        client = setupClient();
-                                });
-                        });
-
-                        c.on("disconnect", function (){
-                                setImmediate(function () {
-                                        client = setupClient();
-                                });
-                        });
-
-                        return c
-                }
-
-                client = setupClient();
-
-                var main = (function () {
-                        var queue = {};
-
-                        return {
-                                queue: function (payload, cb) {
-                                        var id = crypto.createHash("whirlpool").update(Math.random() + Date.now() + "").digest("hex");
-
-                                        queue[id] = cb;
-
-                                        client.write(JSON.stringify({
-                                                refKey: id,
-                                                payload: payload
-                                        }));
-                                },
-                                fire: function (key, payload) {
-                                        queue[key] && queue[key](payload);
-                                        delete queue[key];
-                                }
+                                global.client.write(JSON.stringify({
+                                        refKey: id,
+                                        payload: payload
+                                }));
+                        },
+                        fire: function (key, payload) {
+                                queue[key] && queue[key](payload);
+                                delete queue[key];
                         }
-                })()
+                }
+        })()
 
         var api = [ "hello", "resetpass", "changepass" ];
 

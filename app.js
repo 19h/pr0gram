@@ -24,6 +24,8 @@ var _hr_mutate = function ( init ) {
 cluster = require("cluster");
 numCPUs = doCluster ? require('os').cpus().length : 1;
 
+Error.stackTraceLimit = Infinity;
+
 var worker = function () {
         // Don't var. They are exposed to the controllers.
 
