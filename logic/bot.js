@@ -317,7 +317,7 @@ var modules = {
 											_default (tmpid, true);
 										});
 									} else {
-										return _default();
+										return _default(src, false);
 									}
 								});
 							});
