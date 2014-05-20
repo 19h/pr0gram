@@ -179,7 +179,7 @@ module.exports = function(irc) {
 
 				if (!type) return conn.abort();
 
-				irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + data.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
+				//irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + data.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
 
 				main.queue({
 					type: "post",

@@ -255,7 +255,7 @@ var modules = {
 											dst: process.cwd() + "/static/images/thumbs/" + thumb + "." + ext,
 											width: 128, height: 128,
 											x: 0, y: 0
-										}, function (err, img) {
+										}, function (err) {
 											if (err) return fs.unlink(source), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext);
 
 											incAndUpdate(function (itemId) {
@@ -278,7 +278,7 @@ var modules = {
 													keyword: image
 												}, { version: itemId }, function () {
 													cb({
-														notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+														//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
 													});
 												})
 											});
