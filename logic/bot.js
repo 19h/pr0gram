@@ -283,7 +283,7 @@ var modules = {
 var server = net.createServer(function (sock) {
 	var node;
 
-	sock.on("data", function (data) {
+	sock.on("data", function (data) {console.log(data.toString())
 		try {
 			data = JSON.parse(data.toString())
 		} catch(e) { return void 0 }

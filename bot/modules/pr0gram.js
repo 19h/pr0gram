@@ -70,6 +70,8 @@ module.exports = function(irc) {
                 })
 
                 c.on("data", function(data) {
+                	console.log(data.toString())
+
                         try {
                                 data = JSON.parse(data)
                         } catch (e) { return void 0 }

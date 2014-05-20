@@ -17,12 +17,17 @@
       },
       "dependencies": {
             "co": "*",
+            "co-level": "*",
             "hyperlevel": "*",
+            "ircee": "*",
+            "js-yaml": "*",
             "level-session-hyper": "*",
             "level-sublevel": "*",
             "level-version": "*",
             "mime": "*",
+            "optimist": "*",
             "request": "*",
+            "through": "*",
             "uglifyjs": "*"
       }
 }
