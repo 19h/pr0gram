@@ -26,6 +26,8 @@ module.exports = function(irc) {
 
 	var client;
 
+	global.handlers = [];
+
 	var hs_intv, hs_rc = false;
 	var i = 0;
 
@@ -70,16 +72,16 @@ module.exports = function(irc) {
                 })
 
                 c.on("data", function(data) {
-                	console.log(data.toString())
-
                         try {
-                                data = JSON.parse(data)
+                                data = JSON.parse(data.toString())
                         } catch (e) { return void 0 }
 
                         if ( !data.refKey || !data.payload )
-                                return void 0;
+                                return void 0; // probably ACK ({ payload: { status: 'OK' } })
 
-                        main.fire(data.refKey, data.payload);
+                        global.handlers.forEach(function (handler) {
+                        	handler.fire(data.refKey, data.payload)
+                        })
                 });
 
                 c.on("end", function() {
@@ -108,11 +110,6 @@ module.exports = function(irc) {
         var main = (function () {
                 var queue = {};
 
-                setInterval(function () {
-                	queue.length &&
-                		console.log(queue);
-              	}, 1000)
-
                 return {
                         queue: function (payload, cb) {
                                 var id = crypto.createHash("whirlpool").update(Math.random() + Date.now() + "").digest("hex");
@@ -131,6 +128,8 @@ module.exports = function(irc) {
                         }
                 }
         })()
+
+        global.handlers.push(main);
 
 	var magicNumbers = [
 		["474946", "gif"],

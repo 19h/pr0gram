@@ -47,6 +47,8 @@ module.exports = function(irc) {
                 }
         })()
 
+        global.handlers.push(main);
+
         var api = [ "hello", "resetpass", "changepass" ];
 
         var accounts = function (e, irc) {
