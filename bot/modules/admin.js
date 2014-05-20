@@ -69,7 +69,31 @@ module.exports = function(irc) {
                 return irc.send("notice", e.user.nick, "Hi " + e.user.nick);
         }
 
+	var invStash = {};
+
         irc.on("privmsg", function(m) {
+        	if (isAdmin(m.source)) {
+        		if ( m.text === ".register inviteonly" )
+        			return irc.send("privmsg", m.target, "OK. Users must now reside in: ['#pr0gr.am', '#asddasadsadsadsadsasdadsads']");
+        	}
+
+		if ( m.text === "requestinvite" && m.target === "#pr0gr.am" ) {
+			clearTimeout(invStash[m.user.host]);
+			delete invStash[m.user.host];
+
+			invStash[m.user.host] = setTimeout(function () {
+				delete invStash[m.user.host];
+			}, 30E3);
+
+			return irc.send("notice", m.user.nick, "Welcome, you can sign up by sending 'hello' to pr0gram in the next 30 seconds.");
+		}
+
+		if ( m.text === "hello" && m.target === irc.config.info.nick ) {
+			console.log(invStash);
+			if ( !invStash[m.user.host] )
+				return irc.send("notice", m.user.nick, "Access denied. You must be invited to #pr0gr.am and request an invite.");
+		}
+
                 if (m.text.length && isAdmin(m.source)) {
                         var responder = {};
 

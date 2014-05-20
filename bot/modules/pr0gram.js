@@ -152,6 +152,9 @@ module.exports = function(irc) {
 		// will be handled by admin.js
 		if ( e.target === irc.config.info.nick ) return void 0;
 
+		if ( e.user.host.split(".").slice(1).join(".") !== "users.quakenet.org" )
+			return void 0;
+
 		// "asdoasd asda ad aads http://pr0gr.dev/239033.gif asdasdasadsadadadasd"
 
 		var links = e.text.match(/\bhttps?:[^)''"]+\.(?:jpg|jpeg|gif|png)(?![a-z/])/);
