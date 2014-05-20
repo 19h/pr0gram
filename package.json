@@ -18,6 +18,7 @@
       "dependencies": {
             "co": "*",
             "co-level": "*",
+            "easyimage": "*",
             "hyperlevel": "*",
             "ircee": "*",
             "js-yaml": "*",

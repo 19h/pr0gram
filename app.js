@@ -44,6 +44,8 @@ var worker = function () {
         repl = require("repl"),
         zlib = require("zlib");
 
+        eimg = require("easyimage");
+
         hyper = require("hyperlevel");
 
         db = hyper("pr0gram.db", { encoding: "json" }),

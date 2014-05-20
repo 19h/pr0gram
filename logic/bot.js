@@ -229,41 +229,65 @@ var modules = {
 					var image = uuid();
 					var thumb = uuid();
 
-					var r = request({
-					        uri: envelope.link.href,
-					        strictSSL: false
-					}), r2 = request({
-					        uri: envelope.link.href,
-					        strictSSL: false
-					});
+					return request(envelope.link.href, {
+						encoding: null
+					}, function (error, response, body) {
+						if (!error && response.statusCode == 200) {
+							var source = process.cwd() + "/static/images/" + image + "." + ext;
 
-					_cropImage_stream(r, 128, 128).pipe(fs.createWriteStream("./static/images/thumbs/" + thumb + "." + ext));
-					r2.pipe(fs.createWriteStream("./static/images/" + image + "." + ext));
+							fs.writeFile(source, body, function (err) {
+								if (err) return fs.unlink(source);
 
-					incAndUpdate(function (itemId) {
-						posts.put(image, itemId);
-						posts.put(user.nick + "\xFF" + itemId, "");
+								eimg.info(process.cwd() + "/static/images/" + image + "." + ext, function (err, img) {
+									if (err) return fs.unlink(source);
 
-						user.name = user.nick;
+									if ( (img.width * img.height) > 64E6 ) { // 64E6 = 8k * 8k
+										return fs.unlink(source), cb({
+											notice: "Resolution too big."
+										});
+									}
 
-						posts.put("all", {
-							user: _d,
-							title: shortname,
-							channel: {
-								name: envelope.envelope.target
-							},
-							created: (Date.now()/1000)|0,
-							image: image + "." + ext,
-							thumb: thumb + "." + ext,
-							source: envelope.link.href,
-							type: "image",
-							keyword: image
-						}, { version: itemId }, function () {
-							cb({
-								notice: "[RPC] OK. Posted as: " + user.nick
+									ext = img.type.toLowerCase();
+
+									fs.rename (source, process.cwd() + "/static/images/" + image + "." + ext, function () {
+										eimg.thumbnail({
+											src: process.cwd() + "/static/images/" + image + "." + ext,
+											dst: process.cwd() + "/static/images/thumbs/" + thumb + "." + ext,
+											width: 128, height: 128,
+											x: 0, y: 0
+										}, function (err, img) {
+											if (err) return fs.unlink(source), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext);
+
+											incAndUpdate(function (itemId) {
+												posts.put(image, itemId);
+												posts.put(user.nick + "\xFF" + itemId, "");
+
+												user.name = user.nick;
+
+												posts.put("all", {
+													user: _d,
+													title: shortname,
+													channel: {
+														name: envelope.envelope.target
+													},
+													created: (Date.now()/1000)|0,
+													image: image + "." + ext,
+													thumb: thumb + "." + ext,
+													source: envelope.link.href,
+													type: "image",
+													keyword: image
+												}, { version: itemId }, function () {
+													cb({
+														notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+													});
+												})
+											});
+										});
+									});
+								});
 							});
-						})
-					});
+						}
+					})
 				});
 			});
 
