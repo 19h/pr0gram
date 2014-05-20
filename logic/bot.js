@@ -239,12 +239,12 @@ var modules = {
 								if (err) return fs.unlink(source);
 
 								eimg.info(process.cwd() + "/static/images/" + image + "." + ext, function (err, img) {
-									if (err) return fs.unlink(source);
+									if (err) return fs.unlink(source), cb({});
 
 									if ( (img.width * img.height) > 64E6 ) { // 64E6 = 8k * 8k
 										return fs.unlink(source), cb({
 											notice: "Resolution too big."
-										});
+										}), cb({});
 									}
 
 									ext = img.type.toLowerCase();
@@ -256,7 +256,7 @@ var modules = {
 											width: 128, height: 128,
 											x: 0, y: 0
 										}, function (err) {
-											if (err) return fs.unlink(source), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext);
+											if (err) return fs.unlink(source), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext), cb({});
 
 											incAndUpdate(function (itemId) {
 												posts.put(image, itemId);
@@ -264,21 +264,36 @@ var modules = {
 
 												user.name = user.nick;
 
-												posts.put("all", {
-													user: _d,
-													title: shortname,
-													channel: {
-														name: envelope.envelope.target
-													},
-													created: (Date.now()/1000)|0,
-													image: image + "." + ext,
-													thumb: thumb + "." + ext,
-													source: envelope.link.href,
-													type: "image",
-													keyword: image
-												}, { version: itemId }, function () {
-													cb({
-														//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+												var hash = crypto.createHash("sha1").update(body).digest("hex");
+
+												ref.get(hash, function (err, data) {
+													if (err)
+														return ref.put(hash, {
+															id: itemId,
+															keyword: image
+														}, function (err) {
+															posts.put("all", {
+																user: _d,
+																title: shortname,
+																channel: {
+																	name: envelope.envelope.target
+																},
+																created: (Date.now()/1000)|0,
+																image: image + "." + ext,
+																thumb: thumb + "." + ext,
+																source: envelope.link.href,
+																type: "image",
+																keyword: image,
+																hash: hash
+															}, { version: itemId }, function () {
+																cb({
+																	//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+																});
+															})
+														});
+
+													return cb({
+														notice: "Dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
 													});
 												})
 											});
