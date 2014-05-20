@@ -249,56 +249,74 @@ var modules = {
 
 									ext = img.type.toLowerCase();
 
-									fs.rename (source, process.cwd() + "/static/images/" + image + "." + ext, function () {
-										eimg.thumbnail({
-											src: process.cwd() + "/static/images/" + image + "." + ext,
-											dst: process.cwd() + "/static/images/thumbs/" + thumb + "." + ext,
-											width: 128, height: 128,
-											x: 0, y: 0
-										}, function (err) {
-											if (err) return fs.unlink(source), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext), cb({});
+									var src = process.cwd() + "/static/images/" + image + "." + ext,
+									    dst = process.cwd() + "/static/images/thumbs/" + thumb + "." + ext;
 
-											incAndUpdate(function (itemId) {
-												posts.put(image, itemId);
-												posts.put(user.nick + "\xFF" + itemId, "");
+									var _default = function (src, removeSource) {
+										fs.rename (source, process.cwd() + "/static/images/" + image + "." + ext, function () {
+											eimg.thumbnail({
+												src: src,
+												dst: dst,
+												width: 128, height: 128,
+												x: 0, y: 0
+											}, function (err) {
+												if (err) return fs.unlink(source), fs.unlink(src), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext), cb({});
 
-												user.name = user.nick;
+												// incase we used a temporary gif
+												removeSource && fs.unlink(src);
 
-												var hash = crypto.createHash("sha1").update(body).digest("hex");
+												incAndUpdate(function (itemId) {
+													posts.put(image, itemId);
+													posts.put(user.nick + "\xFF" + itemId, "");
 
-												ref.get(hash, function (err, data) {
-													if (err)
-														return ref.put(hash, {
-															id: itemId,
-															keyword: image
-														}, function (err) {
-															posts.put("all", {
-																user: _d,
-																title: shortname,
-																channel: {
-																	name: envelope.envelope.target
-																},
-																created: (Date.now()/1000)|0,
-																image: image + "." + ext,
-																thumb: thumb + "." + ext,
-																source: envelope.link.href,
-																type: "image",
-																keyword: image,
-																hash: hash
-															}, { version: itemId }, function () {
-																cb({
-																	//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
-																});
-															})
+													user.name = user.nick;
+
+													var hash = crypto.createHash("sha1").update(body).digest("hex");
+
+													ref.get(hash, function (err, data) {
+														if (err)
+															return ref.put(hash, {
+																id: itemId,
+																keyword: image
+															}, function (err) {
+																posts.put("all", {
+																	user: _d,
+																	title: shortname,
+																	channel: {
+																		name: envelope.envelope.target
+																	},
+																	created: (Date.now()/1000)|0,
+																	image: image + "." + ext,
+																	thumb: thumb + "." + ext,
+																	source: envelope.link.href,
+																	type: "image",
+																	keyword: image,
+																	hash: hash
+																}, { version: itemId }, function () {
+																	cb({
+																		//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+																	});
+																})
+															});
+
+														return cb({
+															notice: "Dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
 														});
-
-													return cb({
-														notice: "Dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
-													});
-												})
+													})
+												});
 											});
 										});
-									});
+									}
+
+									if ( ext === "gif" ) {
+										var tmpid = process.cwd() + "/static/images/" + uuid() + ".jpg";
+
+										var convert = childProcess.spawn('/usr/local/bin/convert', [source + '[0]', tmpid]);
+
+										convert.on('close', function (code) {
+											_default (tmpid, true);
+										});
+									}
 								});
 							});
 						}
