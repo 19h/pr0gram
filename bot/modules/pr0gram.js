@@ -180,17 +180,18 @@ module.exports = function(irc) {
                 if (e.text[e.text.indexOf(link.href) + link.href.length] === "?")
                 	isPrivate = true;
 
+                if (isPrivate)
+                	return;
+
                 var _handler = function (err, resp, body) {
                 	if (err) return void 0;
 
 			var type = findType(body);
 			var length = body.length;
 
-			irc.send("privmsg", e.target, "buf: " + body.toString("hex", 0, 10))
-
 			if (!type) return conn.abort();
 
-			irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + body.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
+			//irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + body.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
 
 			main.queue({
 				type: "post",

@@ -300,7 +300,7 @@ var modules = {
 															});
 
 														return cb({
-															notice: "Dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
+															notice: "dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
 														});
 													})
 												});
