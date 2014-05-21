@@ -111,6 +111,62 @@ exports.paths = [
 		}
 	}
 
+	var co_delVersion = function (db, key, ver) {
+		return function (cb) {
+			db.del(key, {
+				version: ver
+			}, function (err) {
+				cb(err)
+			})
+		}
+	}
+
+	var co_delVersionGlobal = function (db, key, ver) {
+		return function (cb) {
+			db.del(key, function (err) {
+				cb(err)
+			})
+		}
+	}
+
+	var collectComments = function (id) {
+		return function (cb) {
+			var comments = [];
+
+			return vref.createVersionStream(id + "\xFFcomments", {
+				reverse: true
+			})
+			.on("data", function (item) {
+				item.value.id = item.version;
+				item.value.name = item.value.user;
+				delete item.value.user;
+				comments.push(item.value);
+			}).on("end", co(function *() {
+				cb(false, comments);
+			}));
+		}
+	}
+
+	var collectTags = function (id) {
+		return function (cb) {
+			var tags = [];
+
+			return vref.createVersionStream(id + "\xFFtags", {
+				reverse: true
+			})
+			.on("data", function (item) {
+				item.value.id = item.version;
+				item.value.name = item.value.user;
+				item.value.tag = item.value.content;
+				delete item.value.user;
+				delete item.value.content;
+				tags.push(item.value);
+			}).on("end", co(function *() {
+				cb(false, tags);
+			}));
+		}
+	}
+
 var std = {
 	success: Buffer('{"status":"success"}'),
 	error: Buffer('{"status":"error"}')
@@ -160,10 +216,6 @@ exports.handler = co(function *( request, response ) {
 				return loginResponse(false, request, response);
 			}
 		}
-
-		response.writeHead(200, {
-			"Content-type": "application/json; charset=utf8"
-		})
 
 		if ( request.url === "/api/user/logout.json" ) {
 			return request.session.destroy(function () {
@@ -249,8 +301,14 @@ exports.handler = co(function *( request, response ) {
 								liked = yield ref.co.get(authedAs+"\xFFlikes\xFF"+retval.items[item].id);
 
 								liked = liked === "" ? true : false;
-							} catch(e) {console.log(e)}
+							} catch(e) {}
 						}
+
+						retval.items[item].comments = yield collectComments(retval.items[item].id);
+						retval.items[item].commentCount = retval.items[item].comments.length;
+
+						retval.items[item].tags = yield collectTags(retval.items[item].id);
+						retval.items[item].tagCount = retval.items[item].tags.length;
 
 						retval.items[item].liked = liked;
 					}
@@ -377,7 +435,7 @@ exports.handler = co(function *( request, response ) {
 				response.end(JSON.stringify({
 					personalized: true,
 					comments: [],
-					commentCount: 2
+					commentCount: 0
 				}))
 			}
 		}
@@ -457,13 +515,206 @@ exports.handler = co(function *( request, response ) {
 			try {
 				var item = yield posts.co_getver("all", data.id);
 
-				return vref.put(data.id+"\xFFcomments", {
-					created: (Date.now() / 1000) | 0,
-					content: data.comment,
-					user: authedAs
+				return vref.del(data.id+"\xFFcomments", {
+
 				}, function () {
 					return response.end(std.success);
 				});
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/tags/add.json") ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id", "tags"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			if ( !data.tags )
+				throw {
+					status: "Tag has to have content"
+				}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			data.tags = data.tags.split(" ").filter(function (v) {
+				return v.length < 100
+			});
+
+			if ( !data.tags.length )
+				throw {
+					status: "Tags may be too long"
+				}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				var n = data.tags.length, i = 0;
+
+				return data.tags.forEach(function (tag) {
+					return vref.put(data.id+"\xFFtags", {
+						created: (Date.now() / 1000) | 0,
+						content: tag,
+						user: authedAs
+					}, function () {
+						return ++i === data.tags.length && response.end(std.success);
+					});
+				});
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/tags/delete.json") ) {
+			var query = qs.parse(request.url.split("/api/tags/delete.json")[1].substr(1));
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(query, [
+				"id"
+			]);
+
+			query.id = ~~query.id;
+
+			if ( isNaN(query.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			data = Object.keys(data).filter(function (v) {
+				return !v.indexOf("tag_")
+			}).map(function (v) {
+				return v.split("_").pop()
+			});
+
+			if ( Object.keys(data).length === 0 ) throw 0;
+
+			try {
+				var item = yield posts.co_getver("all", query.id);
+
+				var n = data.length, i = 0;
+
+				return data.forEach(function (tag) {
+					console.log("Deleting: " + query.id + "\xFFtags -> " + tag);
+					return vref.del(query.id + "\xFFtags", {
+						version: tag
+					}, function (err) {
+						return ++i === data.length && response.end(std.success);
+					});
+				});
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/items/delete.json") ) {
+			var data = yield receivePost(request, response, 1024);
+
+			yield objAssert(data, [
+				"id"
+			]);
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				yield co_delVersionGlobal(vref, query.id + "\xFFtags");
+				yield co_delVersionGlobal(vref, query.id + "\xFFcomments");
+				yield co_delVersion(posts, "all", query.id);
+			} catch(e) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+		}
+
+		if ( !request.url.indexOf("/api/tags/get.json") ) {
+			var data = qs.parse(request.url.split("/api/tags/get.json")[1].substr(1));
+
+			yield objAssert(data, [
+				"id"
+			]);
+
+			console.log(data)
+
+			data.id = ~~data.id;
+
+			if ( isNaN(data.id) ) {
+				throw {
+					status: "Item does not exist"
+				}
+			}
+
+			try {
+				var authedAs = yield request.session.co_get("authedAs");
+
+				if ( !authedAs ) throw 0;
+			} catch(e) {
+				throw {
+					status: "Unauthorized"
+				}
+			}
+
+			try {
+				var item = yield posts.co_getver("all", data.id);
+
+				var tags = yield collectTags(data.id);
+
+				return response.end(JSON.stringify({
+					tags: tags,
+					tagCount: tags.length
+				}))
 			} catch(e) {
 				throw {
 					status: "Item does not exist"
@@ -488,7 +739,7 @@ exports.handler = co(function *( request, response ) {
 			return users.get(user, function (err, _d) {
 				if (err) return response.writeHead(404), response.end();
 
-				var now = Date.now(), items = [], likes = [];
+				var now = Date.now(), items = [], likes = [], comments = [];
 
 				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
 
@@ -520,13 +771,24 @@ exports.handler = co(function *( request, response ) {
 					items.push(item.key.split("\xFF").pop())
 				}).on("end", co(function *() {
 					for ( var item in items ) {
-						var obj = (yield posts.co_getver("all", items[item])).shift();
+						try {
+							var itm = yield posts.co_getver("all", items[item]);
+							
+							var obj = (itm).shift();
 
-						items[item] = {
-							idx: obj.keyword,
-							keyword: obj.keyword,
-							thumb: obj.thumb
-						};
+							items[item] = {
+								idx: obj.keyword,
+								keyword: obj.keyword,
+								thumb: obj.thumb
+							};
+						} catch(e) { // item was deleted
+							yield co_delVersionGlobal(posts, "all", user + "\xFF" + item);
+							delete items[item];
+
+							items[item] = items.filter(function (item) {
+								return item;
+							}); // rebuild items
+						}
 					}
 
 					return ref.createReadStream({
@@ -536,13 +798,24 @@ exports.handler = co(function *( request, response ) {
 						likes.push(item.key.split("\xFF").pop())
 					}).on("end", co(function *() {
 						for ( var like in likes ) {
-							var obj = (yield posts.co_getver("all", likes[like])).shift();
+							try {
+								var itm = yield posts.co_getver("all", likes[like]);
 
-							likes[like] = {
-								idx: obj.keyword,
-								keyword: obj.keyword,
-								thumb: obj.thumb
-							};
+								var obj = (itm).shift();
+
+								likes[like] = {
+									idx: obj.keyword,
+									keyword: obj.keyword,
+									thumb: obj.thumb
+								};
+							} catch(e) { // item was deleted
+								yield co_delVersionGlobal(ref, user + "\xFFlikes\xFF" + like);
+								delete likes[like];
+
+								likes = likes.filter(function (like) {
+									return like;
+								}); // rebuild likes
+							}
 						}
 
 						buildResponse()

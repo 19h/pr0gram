@@ -4807,19 +4807,16 @@ console["clear"].bind(console)();
 
 		if (item.comments && item.commentsSince && (Date.now() - item.commentsSince) < 30E3) {
 			return this.showComments(item.comments);
+		} else if (item.commentCount > 0) {
+			var that = this;
+			this.loader.show();
+			$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
+				that.loadCallback(data, item)
+			});
+		} else {
+			this.loader.hide();
+			this.showComments([]);
 		}
-
-		// else if (item.commentCount > 0) {
-		//	alert(1)
-		//	var that = this;
-		//	this.loader.show();
-		//	$.getJSON('/api/comments/get.json?id=' + item.id, function(data) {
-		//		that.loadCallback(data, item)
-		//	});
-		//} else {
-		//	this.loader.hide();
-		//	this.showComments([]);
-		//}
 
 		// Let's rape the database
 
@@ -6451,9 +6448,8 @@ console["clear"].bind(console)();
 	};
 	Item_Base.prototype.showTags = function(tags) {
 		var tagsHTML = '';
-		if (tags.length > 0) {
+		if (tags.length > 0) {console.log(tags)
 			for (var i = 0; i < tags.length; i++) {
-				var tag = tags[i].escapeHTML();
 				tagsHTML += '<a class="tag" href="#newest/' + tag + '">' + tag + '</a> ';
 			}
 		} else {
