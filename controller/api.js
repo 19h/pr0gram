@@ -669,10 +669,11 @@ exports.handler = co(function *( request, response ) {
 			try {
 				var item = yield posts.co_getver("all", data.id);
 
-				yield co_delVersionGlobal(vref, query.id + "\xFFtags");
-				yield co_delVersionGlobal(vref, query.id + "\xFFcomments");
-				yield co_delVersion(posts, "all", query.id);
+				yield co_delVersionGlobal(vref, data.id + "\xFFtags");
+				yield co_delVersionGlobal(vref, data.id + "\xFFcomments");
+				yield co_delVersion(posts, "all", data.id);
 			} catch(e) {
+				console.log(e)
 				throw {
 					status: "Item does not exist"
 				}

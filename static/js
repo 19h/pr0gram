@@ -6450,6 +6450,7 @@ console["clear"].bind(console)();
 		var tagsHTML = '';
 		if (tags.length > 0) {console.log(tags)
 			for (var i = 0; i < tags.length; i++) {
+				var tag = tags[i].tag.escapeHTML();
 				tagsHTML += '<a class="tag" href="#newest/' + tag + '">' + tag + '</a> ';
 			}
 		} else {
