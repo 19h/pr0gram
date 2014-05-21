@@ -1,5 +1,6 @@
 var net = require("net"),
-    url = require("url");
+    url = require("url"),
+   path = require("path");
 
 var http = require("http"),
    https = require("https");
@@ -268,8 +269,8 @@ module.exports = function(irc) {
 		saveConfig();
 	})
 
-	irc.on("464", function (e) {
-		irc.send("PASS", "pr0gram:0x832040F");
+	irc.on("464", function () {
+		require(path.join(process.cwd(), "../lib/loginHandler.js"))(irc)
 	})
 
 	irc.on("477", function (e) {

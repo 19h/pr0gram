@@ -19,3 +19,4 @@ sessions.db
 session.db
 
 static/images/
+lib/loginHandler.js

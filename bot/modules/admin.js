@@ -89,7 +89,6 @@ module.exports = function(irc) {
 		}
 
 		if ( m.text === "hello" && m.target === irc.config.info.nick ) {
-			console.log(invStash);
 			if ( !invStash[m.user.host] )
 				return irc.send("notice", m.user.nick, "Access denied. You must be invited to #pr0gr.am and request an invite.");
 		}

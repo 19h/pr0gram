@@ -354,99 +354,147 @@ var worker = function () {
                                                 return response._writeHead.apply(this, [a, b]);
                                         }
 
-                                        if ( forceDelegation )
-                                                return response.writeHead(307, {
-                                                        "Location": uri
-                                                }), response.end();
+                                        request.session.get("gwAuthed", function (err, val) {
+                                                if (err || !val) {
+                                                        if ( request.url !== "/login" )
+                                                                return response.writeHead(302, {
+                                                                        Location: "/login"
+                                                                }), response.end();
 
-                                        // SECURITY
-                                                if ( /\.\.\/\.\./.test(uri) || /\.\/\.\./.test(uri) ) 
-                                                        return cancel(response);
-                                                
-                                                if ( fn_.length < (process.cwd()).length )
-                                                        return cancel(response);
-                                                
-                                                if ( ~uri.indexOf("/../") )
-                                                        return cancel(response);
+                                                        if ( request.method === "POST" ) {
+                                                                var req = Buffer(0);
 
-                                        // ROUTER
-                                                for ( var router in controller )
-                                                        for ( route in controller[router].paths ) {
-                                                                if ( (uri.substr(0, controller[router].paths[route].length) === controller[router].paths[route] && (uri.substr(controller[router].paths[route].length, 1) == "/"))
-                                                                                || ( uri === controller[router].paths[route] ) )
-                                                                        return controller[router].handler.apply(this, [
-                                                                                request,
-                                                                                response,
-                                                                                controller[router].paths[route],
-                                                                                uri
-                                                                        ]);
+                                                                request.on("data", function (chunk) {
+                                                                        if ((req.length+chunk.length) > 1024)
+                                                                                return response.end();
+
+                                                                        req = Buffer.concat([req, chunk]);
+                                                                });
+
+                                                                var _cancel = function () {
+                                                                        return response.writeHead(302, {
+                                                                                Location: "/"
+                                                                        }), response.end();
+                                                                }
+
+                                                                request.on("end", function () {
+                                                                        var data = qs.parse(req.toString());
+
+                                                                        if ( !data["nick"] || !data["password"] )
+                                                                                return _cancel();
+
+                                                                        data["nick"] = data["nick"];
+
+                                                                        users.get(data["nick"], function (err, _d) {
+                                                                                if (err) return _cancel();
+
+                                                                                if ( crypto.createHash("whirlpool").update(data.password).digest("hex") !== _d.key )
+                                                                                        return _cancel();
+
+                                                                                request.session.set("gwAuthed", data["nick"], function (err) {
+                                                                                        return _cancel();
+                                                                                });
+                                                                        })
+                                                                });
                                                         }
 
-                                        // BLACKLIST
-                                                rpaths = config.blacklist;
+                                                        return fs.createReadStream(process.cwd() + "/static/login.html").pipe(response);
+                                                }
 
-                                                for ( var rpath in rpaths )
-                                                        if ( uri.substr(0, rpaths[rpath].length) === rpaths[rpath] )
-                                                                return response.writeHead(418, {
-                                                                        "Content-Type": "text/plain"
-                                                                }), response.end("418 I'm a teapot\n");
+                                                if ( forceDelegation )
+                                                        return response.writeHead(307, {
+                                                                "Location": uri
+                                                        }), response.end();
 
-                                        if ( _fs[fn_] == void 0 ) {
-                                                _fs[fn_] = fs.existsSync(fn_)
-                                        }
-                                        
-                                        if ( !_fs[fn_] )
-                                                return cancel(response);
+                                                // SECURITY
+                                                        if ( /\.\.\/\.\./.test(uri) || /\.\/\.\./.test(uri) ) 
+                                                                return cancel(response);
+                                                        
+                                                        if ( fn_.length < (process.cwd()).length )
+                                                                return cancel(response);
+                                                        
+                                                        if ( ~uri.indexOf("/../") )
+                                                                return cancel(response);
 
-                                        var s = fs.createReadStream(fn_),
-                                                etag = _fm["static"+uri] && _fm["static"+uri].mtime || "0"
-                                                ntag = +etag;
+                                                // ROUTER
+                                                        for ( var router in controller )
+                                                                for ( route in controller[router].paths ) {
+                                                                        if ( (uri.substr(0, controller[router].paths[route].length) === controller[router].paths[route] && (uri.substr(controller[router].paths[route].length, 1) == "/"))
+                                                                                        || ( uri === controller[router].paths[route] ) )
+                                                                                return controller[router].handler.apply(this, [
+                                                                                        request,
+                                                                                        response,
+                                                                                        controller[router].paths[route],
+                                                                                        uri
+                                                                                ]);
+                                                                }
 
-                                        if ( request.headers["if-none-match"] == ntag )
-                                                return response.end(response.writeHead(304, {
-                                                        "Date": etag.toString(),
-                                                        "Etag": ntag,
-                                                        "Cache-Control": "max-age=86400, public",
-                                                        "Content-type": "image/jpeg",
-                                                        "Keep-Alive": "timeout=6, max=32",
-                                                        "Connection": "keep-alive"
-                                                }));
+                                                // BLACKLIST
+                                                        rpaths = config.blacklist;
 
-                                        var aE = request.headers['accept-encoding'] || "",
-                                                _resHead = {
-                                                "Content-Type": mime.lookup(fn_) + "; charset=utf8",
-                                                "Cache-control": "max-age=604800",
-                                                "Expire": new Date().toString(),
-                                                "Etag": ntag
-                                        };
+                                                        for ( var rpath in rpaths )
+                                                                if ( uri.substr(0, rpaths[rpath].length) === rpaths[rpath] )
+                                                                        return response.writeHead(418, {
+                                                                                "Content-Type": "text/plain"
+                                                                        }), response.end("418 I'm a teapot\n");
 
-                                        if (~aE.indexOf("deflate")) {
-                                                _resHead['Content-Encoding'] = 'deflate';
+                                                if ( _fs[fn_] == void 0 ) {
+                                                        _fs[fn_] = fs.existsSync(fn_)
+                                                }
+                                                
+                                                if ( !_fs[fn_] )
+                                                        return cancel(response);
+
+                                                var s = fs.createReadStream(fn_),
+                                                        etag = _fm["static"+uri] && _fm["static"+uri].mtime || "0"
+                                                        ntag = +etag;
+
+                                                if ( request.headers["if-none-match"] == ntag )
+                                                        return response.end(response.writeHead(304, {
+                                                                "Date": etag.toString(),
+                                                                "Etag": ntag,
+                                                                "Cache-Control": "max-age=86400, public",
+                                                                "Content-type": "image/jpeg",
+                                                                "Keep-Alive": "timeout=6, max=32",
+                                                                "Connection": "keep-alive"
+                                                        }));
+
+                                                var aE = request.headers['accept-encoding'] || "",
+                                                        _resHead = {
+                                                        "Content-Type": mime.lookup(fn_) + "; charset=utf8",
+                                                        "Cache-control": "max-age=604800",
+                                                        "Expire": new Date().toString(),
+                                                        "Etag": ntag
+                                                };
+
+                                                if (~aE.indexOf("deflate")) {
+                                                        _resHead['Content-Encoding'] = 'deflate';
+                                                        response.writeHead(200, _resHead);
+
+                                                        //if ( _fs_cache_deflate[fn_] ) return _fs_cache_deflate[fn_].pipe(response);
+
+                                                        //_fs_cache_deflate[fn_] = new MemCache();
+                                                        //s.pipe(zlib.createDeflate()).pipe(_fs_cache_deflate[fn_]);
+                                                        //return _fs_cache_deflate[fn_].pipe(response);
+                                                        return s.pipe(zlib.createDeflate()).pipe(response);
+                                                }
+
+                                                if (~aE.indexOf("gzip")) {
+                                                        _resHead['Content-Encoding'] = 'gzip';
+                                                        response.writeHead(200, _resHead);
+
+                                                        //if ( _fs_cache_gzip[fn_] ) return _fs_cache_gzip[fn_].pipe(response);
+
+                                                        //_fs_cache_gzip[fn_] = new MemCache();
+                                                        //s.pipe(zlib.createGzip()).pipe(_fs_cache_gzip[fn_]);
+                                                        //return _fs_cache_gzip[fn_].pipe(response);
+                                                        return s.pipe(zlib.createGzip()).pipe(response);
+                                                }
+                                                
                                                 response.writeHead(200, _resHead);
 
-                                                //if ( _fs_cache_deflate[fn_] ) return _fs_cache_deflate[fn_].pipe(response);
-
-                                                //_fs_cache_deflate[fn_] = new MemCache();
-                                                //s.pipe(zlib.createDeflate()).pipe(_fs_cache_deflate[fn_]);
-                                                //return _fs_cache_deflate[fn_].pipe(response);
-                                                return s.pipe(zlib.createDeflate()).pipe(response);
-                                        }
-
-                                        if (~aE.indexOf("gzip")) {
-                                                _resHead['Content-Encoding'] = 'gzip';
-                                                response.writeHead(200, _resHead);
-
-                                                //if ( _fs_cache_gzip[fn_] ) return _fs_cache_gzip[fn_].pipe(response);
-
-                                                //_fs_cache_gzip[fn_] = new MemCache();
-                                                //s.pipe(zlib.createGzip()).pipe(_fs_cache_gzip[fn_]);
-                                                //return _fs_cache_gzip[fn_].pipe(response);
-                                                return s.pipe(zlib.createGzip()).pipe(response);
-                                        }
-                                        
-                                        response.writeHead(200, _resHead);
-
-                                        return s.pipe(response);
+                                                return s.pipe(response);
+                                        });
                                 });
                         });
                 }).listen(port);
