@@ -6828,8 +6828,8 @@ console["clear"].bind(console)();
 			EXPIRE: 3650
 		},
 		PATH: {
-			IMAGES: '/images/',
-			THUMBS: '/images/thumbs/',
+			IMAGES: 'http://de1i76hjq4ztm.cloudfront.net/images/',
+			THUMBS: 'http://de1i76hjq4ztm.cloudfront.net/images/thumbs/',
 		},
 		LAYOUT: {
 			ITEM: {
