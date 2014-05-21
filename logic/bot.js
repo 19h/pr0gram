@@ -311,7 +311,7 @@ var modules = {
 									if ( ext === "gif" ) {
 										var tmpid = process.cwd() + "/static/images/" + uuid() + ".jpg";
 
-										var convert = childProcess.spawn('/usr/local/bin/convert', [source + '[0]', tmpid]);
+										var convert = childProcess.spawn('convert', [source + '[0]', tmpid]);
 
 										return convert.on('close', function (code) {
 											_default (tmpid, true);
