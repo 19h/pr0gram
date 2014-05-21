@@ -7,6 +7,8 @@ var http = require("http"),
 
 var crypto = require("crypto");
 
+var r = require("request");
+
 module.exports = function(irc) {
 	var isIgnoredUser = module.exports.isIgnoredUser = function(address) {
 		var _ref;
@@ -164,6 +166,11 @@ module.exports = function(irc) {
 
                 var link = url.parse(links[0]);
 
+                if (!link.href)
+                	return void 0;
+
+                link.href = decodeURIComponent(link.href);
+
                 if ( !/((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/.test(link.href) )
                 	return void 0;
 
@@ -173,41 +180,32 @@ module.exports = function(irc) {
                 if (e.text[e.text.indexOf(link.href) + link.href.length] === "?")
                 	isPrivate = true;
 
-                var _handler = function (sock) {
-			sock.on("data", function (data) {
-				var type = findType(data);
-				var length = +sock.headers["content-length"];
+                var _handler = function (err, resp, body) {
+                	if (err) return void 0;
 
-				if (!type) return conn.abort();
+			var type = findType(body);
+			var length = body.length;
 
-				//irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + data.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
+			irc.send("privmsg", e.target, "buf: " + body.toString("hex", 0, 10))
 
-				main.queue({
-					type: "post",
-					format: type,
-					envelope: e,
-					link: link,
-					isPrivate: isPrivate
-				}, function (data) {
-					data.notice && irc.send("privmsg", e.target, data.notice);
-				})
+			if (!type) return conn.abort();
 
-				conn.abort()
+			irc.send("privmsg", e.target, "[BOT] Assuming type: " + type + " Fingerprint: " + body.toString("hex", 0, 4) + " Length: " + length + " Marked as private: " + (isPrivate ? "true" : "false"));
+
+			main.queue({
+				type: "post",
+				format: type,
+				envelope: e,
+				link: link,
+				isPrivate: isPrivate
+			}, function (data) {
+				data.notice && irc.send("privmsg", e.target, data.notice);
 			})
 		}
 
-                if ( link.href.substr(0, 5) === "https" ) {
-                	link.rejectUnauthorized = false;
-                	link.requestCert = false;
-
-			var conn = https.request(link.href, _handler)
-
-			conn.end()
-		} else {
-			var conn = http.request(link.href, _handler)
-
-			conn.end()
-		}
+		r(link.href, {
+			encoding: null
+		}, _handler);
 	});
 
 	irc.on("connect", function() {

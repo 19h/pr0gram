@@ -232,7 +232,7 @@ var modules = {
 					return request(envelope.link.href, {
 						encoding: null
 					}, function (error, response, body) {
-						if (!error && response.statusCode == 200) {
+						if (!error) {
 							var source = process.cwd() + "/static/images/" + image + "." + ext;
 
 							fs.writeFile(source, body, function (err) {

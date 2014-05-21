@@ -44,6 +44,8 @@ var worker = function () {
         repl = require("repl"),
         zlib = require("zlib");
 
+        request = require("request");
+
         eimg = require("easyimage");
 
         hyper = require("hyperlevel");
