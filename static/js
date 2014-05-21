@@ -5061,12 +5061,17 @@ console["clear"].bind(console)();
 		this.maxId = parseInt(data.maxId);
 		this.personalized = data.personalized;
 		var firstIndex = data.firstIndex;
+
+		if ( !data.items )
+			return this.nextRequest();
+		
 		for (var i = 0; i < data.items.length; i++) {
 			var item = data.items[i];
 			item.date = new Date(item.created * 1000);
 			item.index = firstIndex - i;
 			this.items[firstIndex - i] = item;
 		}
+
 		if (this.onLoad) {
 			this.onLoad(data.firstIndex, data.items.length);
 		}
@@ -5314,7 +5319,7 @@ console["clear"].bind(console)();
 				newItemsHTML += '<div id="' + this.thumbRowId + row + '">';
 				for (var col = 0; col < this.cols; col++) {
 					var i = this.resultSet.total - row * this.cols - col - 1;
-					if (i <= this.resultSet.total && i > 0) {
+					if (i <= this.resultSet.total && i >= 0) {
 						var item = this.resultSet.items[i];
 						var isInCache = (!item || scroll == Stream.SCROLL.DEFERED) ? false : true;
 
