@@ -5313,10 +5313,13 @@ console["clear"].bind(console)();
 				numNewRows++;
 				newItemsHTML += '<div id="' + this.thumbRowId + row + '">';
 				for (var col = 0; col < this.cols; col++) {
-					var i = this.resultSet.total - row * this.cols - col;
+					var i = this.resultSet.total - row * this.cols - col - 1;
 					if (i <= this.resultSet.total && i > 0) {
 						var item = this.resultSet.items[i];
 						var isInCache = (!item || scroll == Stream.SCROLL.DEFERED) ? false : true;
+
+						console.log(i)
+
 						var thumbClass = isInCache ? 'thumb' + (item.type != 'image' ? ' playable' : '') : 'thumb thumbEmpty';
 						var keyword = item ? item.keyword : '';
 						var href = this.getItemURL(i, true, keyword).escapeHTML();
