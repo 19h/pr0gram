@@ -682,7 +682,6 @@ exports.handler = co(function *( request, response ) {
 				} catch(e) {}
 
 			} catch(e) {
-				console.log(e)
 				throw {
 					status: "Item does not exist"
 				}
@@ -757,7 +756,7 @@ exports.handler = co(function *( request, response ) {
 					return response.end(JSON.stringify({
 						user: {
 							name: _d.nick,
-							registered: 1393205487193,
+							registered: _d.since,
 							admin: _d.admin || false,
 							banned: _d.banned || false
 						},

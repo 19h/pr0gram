@@ -5913,7 +5913,7 @@ console["clear"].bind(console)();
 					p.push('<span class="adminHead">[Banned]</span> ');
 				}
 				p.push('', user.name, '</h1> <div class="userstats"> ');
-				var registered = (new Date(user.registered * 1000));
+				var registered = (new Date(user.registered));
 				p.push('<div class="userstat"><div>', uploadCount, '</div> Uploads</div> <div class="userstat"><div>', commentCount, '</div> Comments</div> <div class="userstat"><div>', likeCount, '</div> Likes</div> <div class="userstat"><div>', tagCount, '</div> Tags</div> <div class="userstat wide"> <div title="', registered.readableTime(), '">', registered.elapsedTime(), '</div> Time wasted </div> </div> <div style="clear:both;"></div> <h2>Latest Comments</h2> ');
 				for (var i = 0; i < comments.length; i++) {
 					var c = comments[i];
