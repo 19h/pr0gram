@@ -355,7 +355,11 @@ var worker = function () {
                                         }
 
                                         request.session.get("gwAuthed", function (err, val) {
-                                                if ((err || !val) && !~request.url.indexOf("/images/")) {
+                                                if ((err || !val)
+                                                        && !~request.url.indexOf("/images/")
+                                                        && (request.url !== "/css")
+                                                        && (request.url !== "/js")
+                                                        ) {
                                                         if ( request.url !== "/login" )
                                                                 return response.writeHead(302, {
                                                                         Location: "/login"
