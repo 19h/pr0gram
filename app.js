@@ -377,7 +377,7 @@ var worker = function () {
                                                                         }), response.end();
                                                                 }
 
-                                                                request.on("end", function () {
+                                                                return request.on("end", function () {
                                                                         var data = qs.parse(req.toString());
 
                                                                         if ( !data["nick"] || !data["password"] )
@@ -385,13 +385,13 @@ var worker = function () {
 
                                                                         data["nick"] = data["nick"];
 
-                                                                        users.get(data["nick"], function (err, _d) {
+                                                                        return users.get(data["nick"], function (err, _d) {
                                                                                 if (err) return _cancel();
 
                                                                                 if ( crypto.createHash("whirlpool").update(data.password).digest("hex") !== _d.key )
                                                                                         return _cancel();
 
-                                                                                request.session.set("gwAuthed", data["nick"], function (err) {
+                                                                                return request.session.set("gwAuthed", data["nick"], function (err) {
                                                                                         return _cancel();
                                                                                 });
                                                                         })
