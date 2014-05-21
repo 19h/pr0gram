@@ -672,6 +672,15 @@ exports.handler = co(function *( request, response ) {
 				yield co_delVersionGlobal(vref, data.id + "\xFFtags");
 				yield co_delVersionGlobal(vref, data.id + "\xFFcomments");
 				yield co_delVersion(posts, "all", data.id);
+
+				try {
+					fs.unlinkSync(process.cwd() + "/static/images/thumbs/" + item.thumb);
+				} catch(e) {}
+
+				try {
+					fs.unlinkSync(process.cwd() + "/static/images/" + item.keyword);
+				} catch(e) {}
+
 			} catch(e) {
 				console.log(e)
 				throw {
