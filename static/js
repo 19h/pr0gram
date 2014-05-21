@@ -1,5 +1,3 @@
-console["clear"].bind(console)();
-
 (function () {
 	var isProd = !~location.host.indexOf('local');
 
