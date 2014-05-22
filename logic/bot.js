@@ -91,20 +91,9 @@ var pInc = (function(db) {
 
 var postIterator;
 
-settings.get("lastPost", function (err, p) {
-	postIterator = p | 0
-
-	posts.co.get("all", { version: postIterator })(function (err, post) {
-		if ( !err ) ++postIterator // increase if bot died before incrementor was raised
-	})
+posts.getLast("all", function (a, b, v) {
+	postIterator = (v|0) + 1
 })
-
-var incAndUpdate = function (cb) {
-	var k = postIterator++;
-	settings.put("lastPost", k + "", function () {
-		cb(k)
-	})
-}
 
 var health = {
 /*	node: {
@@ -265,45 +254,45 @@ var modules = {
 												// incase we used a temporary gif
 												removeSource && fs.unlink(src);
 
-												incAndUpdate(function (itemId) {
-													posts.put(image, itemId);
-													posts.put(user.nick + "\xFF" + itemId, "");
+												var itemId = postIterator++;
 
-													user.name = user.nick;
+												posts.put(image, itemId);
+												posts.put(user.nick + "\xFF" + itemId, "");
 
-													var hash = crypto.createHash("sha1").update(body).digest("hex");
+												user.name = user.nick;
 
-													ref.get(hash, function (err, data) {
-														if (err)
-															return ref.put(hash, {
-																id: itemId,
-																keyword: image
-															}, function (err) {
-																posts.put("all", {
-																	user: _d,
-																	title: shortname,
-																	channel: {
-																		name: envelope.envelope.target
-																	},
-																	created: (Date.now()/1000)|0,
-																	image: image + "." + ext,
-																	thumb: thumb + "." + ext,
-																	source: envelope.link.href,
-																	type: "image",
-																	keyword: image,
-																	hash: hash
-																}, { version: itemId }, function () {
-																	cb({
-																		//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
-																	});
-																})
-															});
+												var hash = crypto.createHash("sha1").update(body).digest("hex");
 
-														return cb({
-															notice: "dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
+												ref.get(hash, function (err, data) {
+													if (err)
+														return ref.put(hash, {
+															id: itemId,
+															keyword: image
+														}, function (err) {
+															posts.put("all", {
+																user: _d,
+																title: shortname,
+																channel: {
+																	name: envelope.envelope.target
+																},
+																created: (Date.now()/1000)|0,
+																image: image + "." + ext,
+																thumb: thumb + "." + ext,
+																source: envelope.link.href,
+																type: "image",
+																keyword: image,
+																hash: hash
+															}, { version: itemId }, function () {
+																cb({
+																	//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+																});
+															})
 														});
-													})
-												});
+
+													return cb({
+														notice: "dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
+													});
+												})
 											});
 										});
 									}
