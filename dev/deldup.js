@@ -81,60 +81,14 @@ session = require("level-session-hyper")("session.db");
         }
 });
 
-var dump = [];
+var keylist = [];
 
 posts.createVersionStream("all", {
-        reverse: true
-}).on("data", function (item) {
-        dump.push(item)
-}).on("end", function () {
-        if ( process.env.list )
-                return console.log(dump), process.exit();
+	reverse: true
+}).on("data", co(function *(item) {
+	if ( ~keylist.indexOf(item.value.keyword) ) {
+		return yield posts.co_delver("all", item.version)
+	}
 
-        ref.createReadStream().on("data", co(function *(data) {
-                if ( /[0-9a-f]{40}/.test(data.key) ) {
-                        yield ref.co.del(data.key);
-
-                        return console.log("Deleted file-hash: " + data.key);
-                } else {
-                        if ( ~data.key.indexOf("\xFFtags\xFF") ) {
-                                yield ref.co.del(data.key);
-
-                                return console.log("Deleted tag: " + data.key);
-                        }
-
-                        if ( ~data.key.indexOf("\xFFcomments\xFF") ) {
-                                yield ref.co.del(data.key);
-
-                                return console.log("Deleted comment: " + data.key);
-                        }
-                }
-        })).on("end", function () {
-                var _next = function () {
-                        var i = 0, n = dump.length;
-
-                        var keylist = [];
-
-                        dump.filter(function (post) {
-                                if ( ~keylist.indexOf(post.value.keyword) )
-                                        return false;
-
-                                keylist.push(post.value.keyword);
-
-                                return true;
-                        }).forEach(co(function *(post) {
-                                yield posts.co_putver("all", post.value, post.version)
-
-                                ++i === n && (console.log("OK"), process.exit());
-                        }))
-                }
-
-                var i = 0, n = dump.length;
-
-                dump.forEach(co(function *(post) {
-                        yield posts.co_delver("all", post.oldKey);
-
-                        ++i === n && _next();
-                }))
-        })
-})
+	keylist.push(item.value.keyword);
+}))
