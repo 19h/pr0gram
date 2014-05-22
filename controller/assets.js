@@ -35,7 +35,7 @@ if ( !isDev ) {
 	var uglify = require("uglifyjs");
 
 	js = Buffer(uglify.minify(js.toString(), { fromString: true, hoist_vars: true }).code.split("\n").join(""));
-	js = gCrypto(licHead + js + spl);
+	//js = gCrypto(licHead + js + spl);
 }
 
 var toBA = function (str) {
