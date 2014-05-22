@@ -208,7 +208,7 @@ exports.handler = co(function *( request, response ) {
 						})) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
 					});
 
-					return request.session.set("authedAs", data.name, function () {
+					return request.session.set("gwAuthed", data.name, function () {
 						return loginResponse(true, request, response);
 					});
 				}
@@ -254,8 +254,8 @@ exports.handler = co(function *( request, response ) {
 				}
 			}
 
-			return request.session.get("authedAs", function (err, authedAs) {
-				var authed = !err && authedAs;
+			return request.session.get("gwAuthed", function (err, gwAuthed) {
+				var authed = !err && gwAuthed;
 
 				var retval = {
 					firstIndex: false,
@@ -298,7 +298,7 @@ exports.handler = co(function *( request, response ) {
 
 						if ( authed ) {
 							try {
-								liked = yield ref.co.get(authedAs+"\xFFlikes\xFF"+retval.items[item].id);
+								liked = yield ref.co.get(gwAuthed+"\xFFlikes\xFF"+retval.items[item].id);
 
 								liked = liked === "" ? true : false;
 							} catch(e) {}
@@ -334,9 +334,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -346,7 +346,7 @@ exports.handler = co(function *( request, response ) {
 			try {
 				var item = yield posts.co_getver("all", data.id);
 
-				yield ref.co.put(authedAs+"\xFFlikes\xFF"+data.id, "");
+				yield ref.co.put(gwAuthed+"\xFFlikes\xFF"+data.id, "");
 
 				return response.end(std.success);
 			} catch(e) {
@@ -372,9 +372,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -384,7 +384,7 @@ exports.handler = co(function *( request, response ) {
 			try {
 				var item = yield posts.co_getver("all", data.id);
 
-				yield ref.co.del(authedAs+"\xFFlikes\xFF"+data.id, "");
+				yield ref.co.del(gwAuthed+"\xFFlikes\xFF"+data.id, "");
 
 				return response.end(std.success);
 			} catch(e) {
@@ -461,9 +461,9 @@ exports.handler = co(function *( request, response ) {
 				}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -476,7 +476,7 @@ exports.handler = co(function *( request, response ) {
 				return vref.put(data.id+"\xFFcomments", {
 					created: (Date.now() / 1000) | 0,
 					content: data.comment,
-					user: authedAs
+					user: gwAuthed
 				}, function () {
 					return response.end(std.success);
 				});
@@ -503,9 +503,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -548,9 +548,9 @@ exports.handler = co(function *( request, response ) {
 				}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -575,7 +575,7 @@ exports.handler = co(function *( request, response ) {
 					return vref.put(data.id+"\xFFtags", {
 						created: (Date.now() / 1000) | 0,
 						content: tag,
-						user: authedAs
+						user: gwAuthed
 					}, function () {
 						return ++i === data.tags.length && response.end(std.success);
 					});
@@ -604,9 +604,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -657,9 +657,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
@@ -706,9 +706,9 @@ exports.handler = co(function *( request, response ) {
 			}
 
 			try {
-				var authedAs = yield request.session.co_get("authedAs");
+				var gwAuthed = yield request.session.co_get("gwAuthed");
 
-				if ( !authedAs ) throw 0;
+				if ( !gwAuthed ) throw 0;
 			} catch(e) {
 				throw {
 					status: "Unauthorized"
