@@ -3432,9 +3432,6 @@
 					return w
 				}
 			},
-			penis: function () {
-				console.log(this.ajax)
-			},
 			param: function(a, b) {
 				var d = [],
 					e = function(h, k) {
@@ -4871,7 +4868,6 @@
 		var c = $(ev.target).parents('div.comment');
 		var id = c.attr('id').match(/comment(\d+)/)[1];
 		if (confirm('Delete Comment?')) {
-			console.log(this);
 			$.postJSON('/api/comments/delete.json', {
 				id: this.item.id,
 				version: id
@@ -5045,31 +5041,30 @@
 		});
 	};
 	ResultSet.prototype.loadCallback = function(data) {
+		console.log(data); console.trace()
+
 		this.waiting = false;
-		if (window.ResultSetFilter) {
-			window.ResultSetFilter(data);
-		}
+
 		if (!this.totalKnown) {
 			this.totalKnown = true;
 			this.total = parseInt(data.total);
 		}
+
 		this.maxId = parseInt(data.maxId);
 		this.personalized = data.personalized;
 		var firstIndex = data.firstIndex;
 
-		if ( !data.items )
-			return this.nextRequest();
-		
 		for (var i = 0; i < data.items.length; i++) {
 			var item = data.items[i];
 			item.date = new Date(item.created * 1000);
-			item.index = firstIndex - i;
-			this.items[firstIndex - i] = item;
+			item.index = firstIndex - i - 1;
+			this.items[firstIndex - i - 1] = item;
 		}
 
 		if (this.onLoad) {
 			this.onLoad(data.firstIndex, data.items.length);
 		}
+
 		this.nextRequest();
 	};
 	ResultSet.prototype.nextRequest = function() {
@@ -5318,8 +5313,6 @@
 						var item = this.resultSet.items[i];
 						var isInCache = (!item || scroll == Stream.SCROLL.DEFERED) ? false : true;
 
-						console.log(i)
-
 						var thumbClass = isInCache ? 'thumb' + (item.type != 'image' ? ' playable' : '') : 'thumb thumbEmpty';
 						var keyword = item ? item.keyword : '';
 						var href = this.getItemURL(i, true, keyword).escapeHTML();
@@ -5431,12 +5424,6 @@
 		this.container.show();
 	};
 	Page.prototype.loadTemplate = function(t) {
-		console.log("function (data) {" + "var p = []; print = function(a){ p.push(a);}; with(data){p.push('" +
-			t.replace(/'/g, "\\'").replace(/[\r\t\n]/g, " ").replace(/<\?js=(.*?);?\s*\?>/mg, function(m, js) {
-				return "'," + js.replace(/\\'/g, "'") + ",'";
-			}).replace(/<\?js(.*?)\?>/mg, function(m, js) {
-				return "');" + js.replace(/\\'/g, "'") + "p.push('";
-			}) + "');} return p.join('');" + "}")
 		return new Function("data", "var p = []; print = function(a){ p.push(a);}; with(data){p.push('" +
 			t.replace(/'/g, "\\'").replace(/[\r\t\n]/g, " ").replace(/<\?js=(.*?);?\s*\?>/mg, function(m, js) {
 				return "'," + js.replace(/\\'/g, "'") + ",'";
@@ -6446,7 +6433,7 @@
 	};
 	Item_Base.prototype.showTags = function(tags) {
 		var tagsHTML = '';
-		if (tags.length > 0) {console.log(tags)
+		if (tags.length > 0) {
 			for (var i = 0; i < tags.length; i++) {
 				var tag = tags[i].tag.escapeHTML();
 				tagsHTML += '<a class="tag" href="#newest/' + tag + '">' + tag + '</a> ';
