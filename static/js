@@ -4839,7 +4839,7 @@
 			var comment = comments[i];
 			var content = comment.content.escapeHTML().urlsToHTML().newlineToHTML();
 			comment.date = new Date(comment.created * 1000);
-			html += '<div class="comment" id="comment' + comment.id + '"><div class="head">' + '<a href="#user/' + comment.name + '" class="user popover' + (comment.admin ? ' flagA' : '') + '">' + comment.name + '</a> ' + '<span class="time" title="' + comment.date.readableTime() + '">' +
+			html += '<div class="comment" id="comment' + comment.id + '"><div class="head">' + '<a href="#user/' + comment.name + '" class="user popover' + (comment.admin ? ' ' + (comment.root ? 'flagR' : 'flagA') : '') + '">' + comment.name + '</a> ' + '<span class="time" title="' + comment.date.readableTime() + '">' +
 				comment.date.relativeTime(true) + '</span>' + '<a href="#" class="admin delete deleteComment">x</a>' + '</div>' + '<div class="content">' + content + '</div>' + '</div>';
 		}
 		if (comments.length > 0) {
@@ -5899,7 +5899,7 @@
 			with(data) {
 				p.push('<div id="left"><div class="contentBox"> <h1>');
 				if (user.admin) {
-					if (user.name === "apx")
+					if (user.root)
 						p.push('<span class="adminHead" style="color:red;">[root]</span> ');
 					else
 						p.push('<span class="adminHead">[Admin]</span> ');
@@ -6427,7 +6427,7 @@
 		$('#itemTime').text(this.data.date.relativeTime(true)).attr('title', this.data.date.readableTime());
 		if (this.data.user.name) {
 			$('#itemNick').hide();
-			$('#itemUser').show().toggleClass('flagA', !! this.data.user.admin).text(this.data.user.name).attr('href', '/#user/' + this.data.user.name).popOver(User.buildSearchLinks);
+			$('#itemUser').show().toggleClass((this.data.user.root ? 'flagR' : 'flagA'), !! this.data.user.admin).text(this.data.user.name).attr('href', '/#user/' + this.data.user.name).popOver(User.buildSearchLinks);
 		} else {
 			$('#itemUser').hide();
 			$('#itemNick').show().text(this.data.user.nick);

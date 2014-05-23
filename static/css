@@ -1172,6 +1172,13 @@ a.popover:focus {
 	color: #C5D135;
 }
 
+.flagR:before {
+	content: '[R] ';
+	font-size: 90%;
+	font-weight: bold;
+	color: red;
+}
+
 .admin {
 	display: none;
 }
