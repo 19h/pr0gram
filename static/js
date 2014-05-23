@@ -4309,7 +4309,8 @@
 		});
 		this.loadAnonymous();
 		this.saveCookie();
-		this.switchClasses();
+		/*this.switchClasses();*/
+        location.href = "/login";
 	};
 	User.prototype.menu = function(el) {
 		var name = el.text();

@@ -385,8 +385,6 @@ var worker = function () {
                                                                         if ( !data["nick"] || !data["password"] )
                                                                                 return _cancel();
 
-                                                                        data["nick"] = data["nick"];
-
                                                                         return users.get(data["nick"], function (err, _d) {
                                                                                 if (err) return _cancel();
 
@@ -394,6 +392,14 @@ var worker = function () {
                                                                                         return _cancel();
 
                                                                                 return request.session.set("gwAuthed", data["nick"], function (err) {
+                                                                                        response.writeHead(200, {
+                                                                                                "Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
+                                                                                                        name: data["nick"],
+                                                                                                        id: _d.nick,
+                                                                                                        admin: _d.admin
+                                                                                                })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
+                                                                                        });
+
                                                                                         return _cancel();
                                                                                 });
                                                                         })

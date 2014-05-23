@@ -203,7 +203,6 @@ exports.handler = co(function *( request, response ) {
 						"Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
 							name: data.name,
 							id: _d.nick,
-							avatar: "tbi.jpg",
 							admin: _d.admin
 						})) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
 					});
