@@ -169,15 +169,22 @@ exports.paths = [
 		}
 	}
 
+	var userCollectComments = function (id, opts) {
+		return function (cb) {
+			var comments = [];
+
+			return vref.createVersionStream(id + "\xFFcomments", opts)
+			.on("data", function (item) {
+				comments.push(item.value)
+			}).on("end", co(function *() {
+				cb(false, comments);
+			}));
+		}
+	}
+
 var std = {
 	success: Buffer('{"status":"success"}'),
 	error: Buffer('{"status":"error"}')
-};
-
-Array.prototype.remove = function(from, to) {
-	var rest = this.slice((to || from) + 1 || this.length);
-	this.length = from < 0 ? this.length + from : from;
-	return this.push.apply(this, rest);
 };
 
 var i = 0;
@@ -343,8 +350,16 @@ exports.handler = co(function *( request, response ) {
 							start: "\xFFposts\xFF" + user,
 							end: "\xFFposts\xFF" + user + "\u9999"
 						}).on("data", function (item) {
-							console.log(item)
-							items.push(item.key.split("\xFF").pop())
+							var tVer = item.split("\xFF").pop() | 0;
+
+							retval.total = retval.total + 1;
+
+							if ( retval.firstIndex === false )
+								retval.firstIndex = tVer;
+
+							retval.maxId = tVer;
+
+							items.push(item.split("\xFF").pop())
 						}).on("end", co(function *() {
 							return;
 							for ( var item in items ) {
@@ -519,7 +534,14 @@ exports.handler = co(function *( request, response ) {
 					content: data.comment,
 					user: gwAuthed
 				}, function () {
-					return response.end(std.success);
+					return vref.put(gwAuthed+"\xFFcomments", {
+						id: data.id,
+						keyword: item.keyword,
+						created: (Date.now() / 1000) | 0,
+						content: data.comment
+					}, function () {
+						return response.end(std.success);
+					});
 				});
 			} catch(e) {
 				throw {
@@ -668,7 +690,6 @@ exports.handler = co(function *( request, response ) {
 				var n = data.length, i = 0;
 
 				return data.forEach(function (tag) {
-					console.log("Deleting: " + query.id + "\xFFtags -> " + tag);
 					return vref.del(query.id + "\xFFtags", {
 						version: tag
 					}, function (err) {
@@ -736,8 +757,6 @@ exports.handler = co(function *( request, response ) {
 				"id"
 			]);
 
-			console.log(data)
-
 			data.id = ~~data.id;
 
 			if ( isNaN(data.id) ) {
@@ -794,7 +813,23 @@ exports.handler = co(function *( request, response ) {
 				_d.root = ~config.roots.indexOf(user) ? true : false;
 				_d.admin = ~config.admins.indexOf(user) ? true : ( _d.root || false );
 
-				var buildResponse = function () {
+				var buildResponse = co(function *() {
+					comments = yield userCollectComments(user);
+					
+					for ( var comment in comments ) {
+						try {
+							var item = yield posts.co_getver("all", comments[comment].id);
+
+							comments[comment] = {
+								title: item[0].title,
+								keyword: item[0].keyword,
+								idx: item[1],
+								created: comments[comment].created,
+								content: comments[comment].content
+							}
+						} catch(e) {}
+					}
+
 					return response.end(JSON.stringify({
 						user: {
 							name: _d.nick,
@@ -803,8 +838,8 @@ exports.handler = co(function *( request, response ) {
 							root: _d.root,
 							banned: _d.banned || false
 						},
-						comments: [],
-						commentCount: 0,
+						comments: comments.slice(0, 5),
+						commentCount: comments.length,
 						likes: likes,
 						likeCount: likes.length,
 						uploads: items,
@@ -814,7 +849,7 @@ exports.handler = co(function *( request, response ) {
 						cache: false,
 						runtime: now - request.timing
 					}));
-				}
+				})
 
 				db.createReadStream({
 					start: "\xFFposts\xFF" + user,
