@@ -6427,7 +6427,13 @@
 		$('#itemTime').text(this.data.date.relativeTime(true)).attr('title', this.data.date.readableTime());
 		if (this.data.user.name) {
 			$('#itemNick').hide();
-			$('#itemUser').show().toggleClass((this.data.user.root ? 'flagR' : 'flagA'), !! this.data.user.admin).text(this.data.user.name).attr('href', '/#user/' + this.data.user.name).popOver(User.buildSearchLinks);
+			$('#itemUser').show().text(this.data.user.name).attr('href', '/#user/' + this.data.user.name).popOver(User.buildSearchLinks);
+
+			$('#itemUser').removeClass('flagR').removeClass('flagA');
+
+			if ( this.data.user.admin ) {
+				$('#itemUser').addClass(this.data.user.root ? 'flagR' : 'flagA')
+			}
 		} else {
 			$('#itemUser').hide();
 			$('#itemNick').show().text(this.data.user.nick);
