@@ -409,6 +409,11 @@ var worker = function () {
                                                         return fs.createReadStream(process.cwd() + "/static/login.html").pipe(response);
                                                 }
 
+                                                if ( request.url === "/login" )
+                                                        return response.writeHead(302, {
+                                                                Location: "/"
+                                                        }), response.end();
+
                                                 if ( forceDelegation )
                                                         return response.writeHead(307, {
                                                                 "Location": uri
