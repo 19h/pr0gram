@@ -53,18 +53,18 @@ module.exports = function(irc) {
 
         var accounts = function (e, irc) {
                 if ( e.target !== irc.config.info.nick ) return void 0;
-                //if ( !global.chanstats["#Elepanten"] ) return void 0;
 
-                //if ( !global.chanstats["#Elepanten"][e.user.nick] || (global.chanstats["#Elepanten"][e.user.nick] !== "@") )
-                //        return irc.send("notice", e.user.nick, "You must be op in #Elepanten.");
+                if ( e.user.host.split(".").slice(1).join(".") !== "users.quakenet.org" )
+                        return irc.send("notice", e.user.nick, "Please auth and +x yourself.");
 
-                if ( ~api.indexOf(e.text.split(" ")[0]) )
+                if ( ~api.indexOf(e.text.split(" ")[0]) ) {
                         return main.queue({
                                 type: e.text.split(" ")[0],
                                 payload: e
                         }, function (payload) {
                                 irc.send("notice", e.user.nick, payload);
                         })
+                }
 
                 return irc.send("notice", e.user.nick, "Hi " + e.user.nick);
         }
