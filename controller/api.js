@@ -196,6 +196,8 @@ exports.handler = co(function *( request, response ) {
 					return loginResponse(false, request, response);
 				}
 
+				data.name = String(data.name).toLowerCase();
+
 				try {
 					var _d = yield users.co.get(data.name);
 				} catch(e) {

@@ -385,16 +385,21 @@ var worker = function () {
                                                                         if ( !data["nick"] || !data["password"] )
                                                                                 return _cancel();
 
-                                                                        return users.get(data["nick"], function (err, _d) {
+                                                                        var nick = String(data["nick"]).toLowerCase();
+
+                                                                        return users.get(nick, function (err, _d) {
                                                                                 if (err) return _cancel();
 
                                                                                 if ( crypto.createHash("whirlpool").update(data.password).digest("hex") !== _d.key )
                                                                                         return _cancel();
 
-                                                                                return request.session.set("gwAuthed", data["nick"], function (err) {
+                                                                                _d.root = ~config.roots.indexOf(nick) ? true : false;
+                                                                                _d.admin = ~config.admins.indexOf(nick) ? true : ( _d.root || false );
+
+                                                                                return request.session.set("gwAuthed", nick, function (err) {
                                                                                         return response.writeHead(302, {
                                                                                                 "Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
-                                                                                                        name: data["nick"],
+                                                                                                        name: nick,
                                                                                                         id: _d.nick,
                                                                                                         admin: !!_d.admin
                                                                                                 })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/",
