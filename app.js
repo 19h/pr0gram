@@ -396,7 +396,7 @@ var worker = function () {
                                                                                                 "Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
                                                                                                         name: data["nick"],
                                                                                                         id: _d.nick,
-                                                                                                        admin: _d.admin
+                                                                                                        admin: !!_d.admin
                                                                                                 })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
                                                                                         });
 
