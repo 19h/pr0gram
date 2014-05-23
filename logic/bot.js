@@ -130,9 +130,7 @@ var modules = {
 				try {
 					shortname = envelope.link.path.split("/").pop().split(".").shift();
 				} catch(e) {
-					return cb({
-						notice: "Unknown error"
-					});
+					return cb({}); // unknown error
 				}
 
 				var ext = envelope.link.href.split(".").pop();
@@ -153,9 +151,8 @@ var modules = {
 								if (err) return fs.unlink(source), cb({});
 
 								if ( (img.width * img.height) > 64E6 ) { // 64E6 = 8k * 8k
-									return fs.unlink(source), cb({
-										notice: "Resolution too big."
-									}), cb({});
+									return fs.unlink(source), cb({});
+										// Resolution too big.
 								}
 
 								ext = img.type.toLowerCase();
@@ -205,9 +202,7 @@ var modules = {
 															keyword: image,
 															hash: hash
 														}, { version: itemId }, function () {
-															cb({
-																//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
-															});
+															// OK, posted
 														})
 													});
 
