@@ -1,0 +1,23 @@
+server: sly.mn
+port: 58735
+channels: 
+  - "#Elepanten"
+  - "#pr0gr.am"
+info: 
+  nick: telemonk
+  user: pr0gram/qn2
+  name: telemonk
+admins: 
+  - ".+@apx.users.quakenet.org"
+bcnicks: 
+  - apx
+ignore: 
+  users: 
+    - ".+@unaffiliated/something"
+cmdchar: "!"
+vhost: null
+modules: 
+  - admin
+  - log
+  - pr0gram
+__file: /Volumes/Hyperstore/pr0gr.am/bot/config.yaml

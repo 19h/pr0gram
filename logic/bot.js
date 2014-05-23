@@ -6,37 +6,6 @@ var ripe = function (p) {
 	return crypto.createHash("ripemd").update(p).digest("hex");
 }
 
-var _cropImage_stream = function(streamIn, w, h) {
-        var command = 'convert';
-
-        var args = [
-                "-", // use stdin
-                "-resize", w + "x", // resize width to 640
-                "-gravity", "center", // sets the offset to the center
-                "-crop", w + "x" + h + "+0+0", // crop
-                "+repage", // reset the virtual canvas meta-data from the images.
-                "-" // output to stdout
-        ];
-
-        var proc = childProcess.spawn(command, args);
-
-        var stream = new Stream();
-
-        proc.stderr.on('data', new Function("return true"));
-        proc.stdout.on('data', stream.emit.bind(stream, 'data'));
-        proc.stdout.on('end', stream.emit.bind(stream, 'end'));
-        proc.on('error', new Function("return true"));
-
-        if (streamIn instanceof Buffer) {
-                proc.stdin.write(streamIn);
-                proc.stdin.emit("end");
-        } else {
-                streamIn.pipe(proc.stdin);
-        }
-
-        return stream;
-};
-
 var _uuid = function () {
 	var _seed = process.hrtime();
 	_seed = _seed[0] + 1E9 * _seed[1];
@@ -46,48 +15,6 @@ var _uuid = function () {
 var uuid = function () {
 	return ripe(String(_uuid()));
 }
-
-var pInc = (function(db) {
-        var cache = {}, noop = new Function;
-
-        var inc = function (key, val, callback) {
-                if (typeof val === "function") {
-                        callback = val
-                        val = 1
-                } else if (arguments.length < 2) {
-                        val = 1
-                }
-
-                callback = callback || noop
-
-                if (cache[key]) {
-                        cache[key].ready.push(callback)
-                        cache[key].value += val
-                        return
-                }
-
-                cache[key] = {
-                        value: val,
-                        ready: [callback]
-                }
-
-                db.get(key, function(err, current) {
-                        var ready = cache[key].ready
-
-                        current = current | 0
-                        current += cache[key].value
-                        delete cache[key]
-
-                        db.put(key, current, function(err) {
-                                ready.map(function(cb) {
-                                        return cb(err)
-                                })
-                        })
-                })
-        }
-
-        return inc
-})(settings);
 
 var postIterator;
 
@@ -197,121 +124,129 @@ var modules = {
 			var nick = envelope.envelope.user.nick.toLowerCase();
 			var displayNick = envelope.envelope.user.nick;
 
-			return ref.get(host, function (err, _d) {
-				if (err) return cb({});
+			var _init = function (user) {
+				var shortname;
 
-				users.get(_d, function (err, user) {
-					if (err) return cb({});
+				try {
+					shortname = envelope.link.path.split("/").pop().split(".").shift();
+				} catch(e) {
+					return cb({
+						notice: "Unknown error"
+					});
+				}
 
-					var shortname;
+				var ext = envelope.link.href.split(".").pop();
 
-					try {
-						shortname = envelope.link.path.split("/").pop().split(".").shift();
-					} catch(e) {
-						return cb({
-							notice: "Unknown error"
+				var image = uuid();
+				var thumb = uuid();
+
+				return request(envelope.link.href, {
+					encoding: null
+				}, function (error, response, body) {
+					if (!error) {
+						var source = process.cwd() + "/static/images/" + image + "." + ext;
+
+						fs.writeFile(source, body, function (err) {
+							if (err) return fs.unlink(source);
+
+							eimg.info(process.cwd() + "/static/images/" + image + "." + ext, function (err, img) {
+								if (err) return fs.unlink(source), cb({});
+
+								if ( (img.width * img.height) > 64E6 ) { // 64E6 = 8k * 8k
+									return fs.unlink(source), cb({
+										notice: "Resolution too big."
+									}), cb({});
+								}
+
+								ext = img.type.toLowerCase();
+
+								var src = process.cwd() + "/static/images/" + image + "." + ext,
+								    dst = process.cwd() + "/static/images/thumbs/" + thumb + "." + ext;
+
+								var _default = function (src, removeSource) {
+									fs.rename (source, process.cwd() + "/static/images/" + image + "." + ext, function () {
+										eimg.thumbnail({
+											src: src,
+											dst: dst,
+											width: 128, height: 128,
+											x: 0, y: 0
+										}, function (err) {
+											if (err) return fs.unlink(source), fs.unlink(src), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext), cb({});
+
+											// incase we used a temporary gif
+											removeSource && fs.unlink(src);
+
+											var itemId = postIterator++;
+
+											posts.put(image, itemId);
+											posts.put(user.nick + "\xFF" + itemId, "");
+
+											user.name = user.nick;
+
+											var hash = crypto.createHash("sha1").update(body).digest("hex");
+
+											ref.get(hash, function (err, data) {
+												if (err)
+													return ref.put(hash, {
+														id: itemId,
+														keyword: image
+													}, function (err) {
+														posts.put("all", {
+															user: _d,
+															title: shortname,
+															channel: {
+																name: envelope.envelope.target
+															},
+															created: (Date.now()/1000)|0,
+															image: image + "." + ext,
+															thumb: thumb + "." + ext,
+															source: envelope.link.href,
+															type: "image",
+															keyword: image,
+															hash: hash
+														}, { version: itemId }, function () {
+															cb({
+																//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
+															});
+														})
+													});
+
+												return cb({
+													notice: "dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
+												});
+											})
+										});
+									});
+								}
+
+								if ( ext === "gif" ) {
+									var tmpid = process.cwd() + "/static/images/" + uuid() + ".jpg";
+
+									var convert = childProcess.spawn('convert', [source + '[0]', tmpid]);
+
+									return convert.on('close', function (code) {
+										_default (tmpid, true);
+									});
+								} else {
+									return _default(src, false);
+								}
+							});
 						});
 					}
+				})
+			}
 
-					var ext = envelope.link.href.split(".").pop();
+			return ref.get(host, function (err, _d) {
+				if (err) return _init ({
+					nick: nick
+				});
 
-					var image = uuid();
-					var thumb = uuid();
+				users.get(_d, function (err, user) {
+					if (err) return _init ({
+						nick: nick
+					});
 
-					return request(envelope.link.href, {
-						encoding: null
-					}, function (error, response, body) {
-						if (!error) {
-							var source = process.cwd() + "/static/images/" + image + "." + ext;
-
-							fs.writeFile(source, body, function (err) {
-								if (err) return fs.unlink(source);
-
-								eimg.info(process.cwd() + "/static/images/" + image + "." + ext, function (err, img) {
-									if (err) return fs.unlink(source), cb({});
-
-									if ( (img.width * img.height) > 64E6 ) { // 64E6 = 8k * 8k
-										return fs.unlink(source), cb({
-											notice: "Resolution too big."
-										}), cb({});
-									}
-
-									ext = img.type.toLowerCase();
-
-									var src = process.cwd() + "/static/images/" + image + "." + ext,
-									    dst = process.cwd() + "/static/images/thumbs/" + thumb + "." + ext;
-
-									var _default = function (src, removeSource) {
-										fs.rename (source, process.cwd() + "/static/images/" + image + "." + ext, function () {
-											eimg.thumbnail({
-												src: src,
-												dst: dst,
-												width: 128, height: 128,
-												x: 0, y: 0
-											}, function (err) {
-												if (err) return fs.unlink(source), fs.unlink(src), fs.unlink(process.cwd() + "/static/images/thumbs/" + thumb + "." + ext), cb({});
-
-												// incase we used a temporary gif
-												removeSource && fs.unlink(src);
-
-												var itemId = postIterator++;
-
-												posts.put(image, itemId);
-												posts.put(user.nick + "\xFF" + itemId, "");
-
-												user.name = user.nick;
-
-												var hash = crypto.createHash("sha1").update(body).digest("hex");
-
-												ref.get(hash, function (err, data) {
-													if (err)
-														return ref.put(hash, {
-															id: itemId,
-															keyword: image
-														}, function (err) {
-															posts.put("all", {
-																user: _d,
-																title: shortname,
-																channel: {
-																	name: envelope.envelope.target
-																},
-																created: (Date.now()/1000)|0,
-																image: image + "." + ext,
-																thumb: thumb + "." + ext,
-																source: envelope.link.href,
-																type: "image",
-																keyword: image,
-																hash: hash
-															}, { version: itemId }, function () {
-																cb({
-																	//notice: "[RPC] OK. Posted as: " + user.nick + "; debug: " + JSON.stringify(image) + "; " + JSON.stringify(img)
-																});
-															})
-														});
-
-													return cb({
-														notice: "dup: http://pr0gr.am/#newest/*/" + data.id + "/" + data.keyword
-													});
-												})
-											});
-										});
-									}
-
-									if ( ext === "gif" ) {
-										var tmpid = process.cwd() + "/static/images/" + uuid() + ".jpg";
-
-										var convert = childProcess.spawn('convert', [source + '[0]', tmpid]);
-
-										return convert.on('close', function (code) {
-											_default (tmpid, true);
-										});
-									} else {
-										return _default(src, false);
-									}
-								});
-							});
-						}
-					})
+					return _init(user);
 				});
 			});
 
