@@ -5899,7 +5899,10 @@
 			with(data) {
 				p.push('<div id="left"><div class="contentBox"> <h1>');
 				if (user.admin) {
-					p.push('<span class="adminHead">[Admin]</span> ');
+					if (user.name === "apx")
+						p.push('<span class="adminHead" style="color:red;">[root]</span> ');
+					else
+						p.push('<span class="adminHead">[Admin]</span> ');
 				}
 				p.push('');
 				if (user.banned) {
