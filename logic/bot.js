@@ -175,7 +175,7 @@ var modules = {
 
 											var itemId = postIterator++;
 
-											posts.put(image, itemId);
+											db.put("\xFFposts\xFF" + image, itemId);
 											posts.put(user.nick + "\xFF" + itemId, "");
 
 											user.name = user.nick;

@@ -4309,7 +4309,9 @@
 		});
 		this.loadAnonymous();
 		this.saveCookie();
+		
 		/*this.switchClasses();*/
+
 		var xmlHttp = new XMLHttpRequest();
 		xmlHttp.open('PUT', '/', true);
 		xmlHttp.onreadystatechange = function () {
