@@ -4310,7 +4310,12 @@
 		this.loadAnonymous();
 		this.saveCookie();
 		/*this.switchClasses();*/
-        location.href = "/login";
+		var xmlHttp = new XMLHttpRequest();
+		xmlHttp.open('PUT', '/', true);
+		xmlHttp.onreadystatechange = function () {
+			(xmlHttp.readyState == 4) && (location.href = "/login")
+		};
+		xmlHttp.send(null);
 	};
 	User.prototype.menu = function(el) {
 		var name = el.text();
