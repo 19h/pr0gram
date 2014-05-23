@@ -360,7 +360,7 @@ var worker = function () {
                                                 if ((err || !val) && !~request.url.indexOf("/images/")) {
                                                         if ( request.url !== "/login" )
                                                                 return response.writeHead(302, {
-                                                                        Location: "/login"
+                                                                        "Location": "/login"
                                                                 }), response.end();
 
                                                         if ( request.method === "POST" ) {
@@ -375,7 +375,7 @@ var worker = function () {
 
                                                                 var _cancel = function () {
                                                                         return response.writeHead(302, {
-                                                                                Location: "/"
+                                                                                "Location": "/"
                                                                         }), response.end();
                                                                 }
 
@@ -392,15 +392,14 @@ var worker = function () {
                                                                                         return _cancel();
 
                                                                                 return request.session.set("gwAuthed", data["nick"], function (err) {
-                                                                                        response.writeHead(200, {
+                                                                                        return response.writeHead(302, {
                                                                                                 "Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
                                                                                                         name: data["nick"],
                                                                                                         id: _d.nick,
                                                                                                         admin: !!_d.admin
-                                                                                                })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
-                                                                                        });
-
-                                                                                        return _cancel();
+                                                                                                })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/",
+                                                                                                "Location": "/"
+                                                                                        }), response.end();
                                                                                 });
                                                                         })
                                                                 });
