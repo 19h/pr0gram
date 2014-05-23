@@ -797,7 +797,8 @@ exports.handler = co(function *( request, response ) {
 						user: {
 							name: _d.nick,
 							registered: _d.since,
-							admin: _d.admin || false,
+							admin: _d.admin,
+							root: _d.root,
 							banned: _d.banned || false
 						},
 						comments: [],
