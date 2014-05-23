@@ -305,8 +305,6 @@ exports.handler = co(function *( request, response ) {
 						retval.items.push(post.value);
 					}).on("end", co(function *() {
 						for ( var item in retval.items ) {
-							if ( typeof retval.items[item].user !== "string" )
-								break;
 
 							retval.items[item].user = {
 								name: retval.items[item].user
@@ -344,8 +342,6 @@ exports.handler = co(function *( request, response ) {
 
 						var _d = yield users.co.get(user);
 
-						var items = [];
-
 						return db.createKeyStream({
 							start: "\xFFposts\xFF" + user,
 							end: "\xFFposts\xFF" + user + "\u9999"
@@ -359,25 +355,53 @@ exports.handler = co(function *( request, response ) {
 
 							retval.maxId = tVer;
 
-							items.push(item.split("\xFF").pop())
+							retval.items.push(item.split("\xFF").pop())
 						}).on("end", co(function *() {
-							return;
-							for ( var item in items ) {
-								try {
-									var itm = yield posts.co_getver("all", items[item]),
-									    obj = (itm).shift();
+							for ( var item in retval.items ) {
+								var xitm = yield posts.co_getver("all", retval.items[item]);
+								var itm = xitm.shift();
 
-								} catch(e) {
-									yield co_delVersionGlobal(posts, "all", user + "\xFF" + item);
-									delete items[item];
+								var ver = xitm.shift() | 0;
 
-									items[item] = items.filter(function (item) {
-										return item;
-									}); // rebuild items
+								//if ( typeof itm.user !== "string" )
+								//	continue;
+
+								itm.index = ver;
+								itm.id    = ver;
+
+								itm.channel.keyword = "yolo";
+
+								itm.user.name = itm.user.nick;
+
+								itm.user = {
+									name: itm.user
+								};
+
+								itm.user.root = ~config.roots.indexOf(itm.user.name) ? true : false;
+								itm.user.admin = ~config.admins.indexOf(itm.user.name) ? true : ( itm.user.root || false );
+
+								var liked = false;
+
+								if ( authed ) {
+									try {
+										liked = yield ref.co.get(gwAuthed+"\xFFlikes\xFF"+itm.id);
+
+										liked = liked === "" ? true : false;
+									} catch(e) {}
 								}
+
+								itm.comments = yield collectComments(itm.id);
+								itm.commentCount = itm.comments.length;
+
+								itm.tags = yield collectTags(itm.id);
+								itm.tagCount = itm.tags.length;
+
+								itm.liked = liked;
+
+								retval.items[item] = itm;
 							}
 
-							response.end(JSON.stringify(items))
+							response.end(JSON.stringify(retval))
 						}));
 					} catch(e) { return response.end(e.stack) }
 				}
@@ -864,7 +888,7 @@ exports.handler = co(function *( request, response ) {
 							var obj = (itm).shift();
 
 							items[item] = {
-								idx: obj.keyword,
+								idx: itm.shift(),
 								keyword: obj.keyword,
 								thumb: obj.thumb
 							};
@@ -891,7 +915,7 @@ exports.handler = co(function *( request, response ) {
 								var obj = (itm).shift();
 
 								likes[like] = {
-									idx: obj.keyword,
+									idx: itm.shift(),
 									keyword: obj.keyword,
 									thumb: obj.thumb
 								};
