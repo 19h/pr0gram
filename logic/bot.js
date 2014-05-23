@@ -176,7 +176,7 @@ var modules = {
 											var itemId = postIterator++;
 
 											db.put("\xFFposts\xFF" + image, itemId);
-											posts.put(user.nick + "\xFF" + itemId, "");
+											db.put("\xFFposts\xFF" + user.nick + "\xFF" + itemId, "");
 
 											user.name = user.nick;
 
@@ -189,7 +189,7 @@ var modules = {
 														keyword: image
 													}, function (err) {
 														posts.put("all", {
-															user: _d,
+															user: user.nick,
 															title: shortname,
 															channel: {
 																name: envelope.envelope.target
