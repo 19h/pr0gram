@@ -5,7 +5,7 @@ channels:
   - "#pr0gr.am"
 info: 
   nick: pr0gram
-  user: pr0gram
+  user: pr0gram/qn
   name: pr0gram
 admins: 
   - ".+@apx.users.quakenet.org"
