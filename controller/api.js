@@ -138,6 +138,7 @@ exports.paths = [
 			})
 			.on("data", function (item) {
 				item.value.id = item.version;
+				item.value.admin = ~config.admins.indexOf(item.value.user) ? true : false;
 				item.value.name = item.value.user;
 				delete item.value.user;
 				comments.push(item.value);
@@ -200,7 +201,7 @@ exports.handler = co(function *( request, response ) {
 					return loginResponse(false, request, response)
 				}
 
-				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
+				_d.admin = ~config.admins.indexOf(data.name) ? true : false;
 
 				if ( whirlpool(data.password) !== _d.key ) {
 					return loginResponse(false, request, response);
@@ -299,6 +300,8 @@ exports.handler = co(function *( request, response ) {
 							retval.items[item].user = {
 								name: retval.items[item].user
 							};
+
+							retval.items[item].user.admin = ~config.admins.indexOf(retval.items[item].user.name) ? true : false;
 
 							var liked = false;
 
@@ -783,7 +786,7 @@ exports.handler = co(function *( request, response ) {
 
 				var now = Date.now(), items = [], likes = [], comments = [];
 
-				_d.admin = ~config.admins.indexOf(_d.host) ? true : false;
+				_d.admin = ~config.admins.indexOf(user) ? true : false;
 
 				var buildResponse = function () {
 					return response.end(JSON.stringify({
