@@ -455,23 +455,13 @@ exports.handler = co(function *( request, response ) {
 			try {
 				var item = yield posts.co_getver("all", data.id);
 
-				var comments = [];
+				var comments = yield collectComments(data.id)
 
-				return vref.createVersionStream(data.id + "\xFFcomments", {
-					reverse: true
-				})
-				.on("data", function (item) {
-					item.value.id = item.version;
-					item.value.name = item.value.user;
-					delete item.value.user;
-					comments.push(item.value);
-				}).on("end", co(function *() {
-					response.end(JSON.stringify({
-						personalized: true,
-						comments: comments,
-						commentCount: comments.length
-					}))
-				}));
+				response.end(JSON.stringify({
+					personalized: true,
+					comments: comments,
+					commentCount: comments.length
+				}))
 
 				return response.end(std.success);
 			} catch(e) {
