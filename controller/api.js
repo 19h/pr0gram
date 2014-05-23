@@ -172,6 +172,12 @@ var std = {
 	error: Buffer('{"status":"error"}')
 };
 
+Array.prototype.remove = function(from, to) {
+	var rest = this.slice((to || from) + 1 || this.length);
+	this.length = from < 0 ? this.length + from : from;
+	return this.push.apply(this, rest);
+};
+
 var i = 0;
 
 exports.handler = co(function *( request, response ) {
@@ -253,7 +259,7 @@ exports.handler = co(function *( request, response ) {
 				}
 			}
 
-			return request.session.get("gwAuthed", function (err, gwAuthed) {
+			return request.session.get("gwAuthed", co(function *(err, gwAuthed) {
 				var authed = !err && gwAuthed;
 
 				var retval = {
@@ -265,56 +271,94 @@ exports.handler = co(function *( request, response ) {
 					totalKnown: true
 				};
 
-				return posts.createVersionStream("all", {
-					limit: count
-				}).on("data", function (post) {
-					retval.total = retval.total + 1;
+				if ( data.q === "*" ) {
+					return posts.createVersionStream("all", {
+						limit: count
+					}).on("data", function (post) {
+						retval.total = retval.total + 1;
 
-					if ( retval.firstIndex === false )
-						retval.firstIndex = post.version;
+						if ( retval.firstIndex === false )
+							retval.firstIndex = post.version;
 
-					retval.maxId = post.version;
+						retval.maxId = post.version;
 
-					post.value.index = post.version;
-					post.value.id    = post.version;
+						post.value.index = post.version;
+						post.value.id    = post.version;
 
-					post.value.channel.keyword = "yolo";
-					post.value.liked = false;
-					post.value.user.name = post.value.user.nick;
-					post.value.tags = [];
+						post.value.channel.keyword = "yolo";
+						post.value.liked = false;
+						post.value.user.name = post.value.user.nick;
+						post.value.tags = [];
 
-					retval.items.push(post.value);
-				}).on("end", co(function *() {
-					for ( var item in retval.items ) {
-						if ( typeof retval.items[item].user !== "string" )
-							break;
+						retval.items.push(post.value);
+					}).on("end", co(function *() {
+						for ( var item in retval.items ) {
+							if ( typeof retval.items[item].user !== "string" )
+								break;
 
-						retval.items[item].user = {
-							name: retval.items[item].user
-						};
+							retval.items[item].user = {
+								name: retval.items[item].user
+							};
 
-						var liked = false;
+							var liked = false;
 
-						if ( authed ) {
-							try {
-								liked = yield ref.co.get(gwAuthed+"\xFFlikes\xFF"+retval.items[item].id);
+							if ( authed ) {
+								try {
+									liked = yield ref.co.get(gwAuthed+"\xFFlikes\xFF"+retval.items[item].id);
 
-								liked = liked === "" ? true : false;
-							} catch(e) {}
+									liked = liked === "" ? true : false;
+								} catch(e) {}
+							}
+
+							retval.items[item].comments = yield collectComments(retval.items[item].id);
+							retval.items[item].commentCount = retval.items[item].comments.length;
+
+							retval.items[item].tags = yield collectTags(retval.items[item].id);
+							retval.items[item].tagCount = retval.items[item].tags.length;
+
+							retval.items[item].liked = liked;
 						}
 
-						retval.items[item].comments = yield collectComments(retval.items[item].id);
-						retval.items[item].commentCount = retval.items[item].comments.length;
+						response.end(JSON.stringify(retval))
+					}));
+				}
 
-						retval.items[item].tags = yield collectTags(retval.items[item].id);
-						retval.items[item].tagCount = retval.items[item].tags.length;
+				if ( data.q.split(":")[0] === "uploads" ) {
+					try {
+						var user = data.q.split(":")[1];
 
-						retval.items[item].liked = liked;
-					}
+						var _d = yield users.co.get(user);
 
-					response.end(JSON.stringify(retval))
-				}));
-			});
+						var items = [];
+
+						return db.createKeyStream({
+							start: "\xFFposts\xFF" + user,
+							end: "\xFFposts\xFF" + user + "\u9999"
+						}).on("data", function (item) {
+							console.log(item)
+							items.push(item.key.split("\xFF").pop())
+						}).on("end", co(function *() {
+							return;
+							for ( var item in items ) {
+								try {
+									var itm = yield posts.co_getver("all", items[item]),
+									    obj = (itm).shift();
+
+								} catch(e) {
+									yield co_delVersionGlobal(posts, "all", user + "\xFF" + item);
+									delete items[item];
+
+									items[item] = items.filter(function (item) {
+										return item;
+									}); // rebuild items
+								}
+							}
+
+							response.end(JSON.stringify(items))
+						}));
+					} catch(e) { return response.end(e.stack) }
+				}
+			}));
 		}
 
 		if ( request.url === "/api/items/like.json" ) {
@@ -772,9 +816,9 @@ exports.handler = co(function *( request, response ) {
 					}));
 				}
 
-				posts.createReadStream({
-					start: user,
-					end: user + "\u9999"
+				db.createReadStream({
+					start: "\xFFposts\xFF" + user,
+					end: "\xFFposts\xFF" + user + "\u9999"
 				}).on("data", function (item) {
 					items.push(item.key.split("\xFF").pop())
 				}).on("end", co(function *() {
