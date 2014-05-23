@@ -249,10 +249,6 @@ var modules = {
 					return _init(user);
 				});
 			});
-
-			cb({
-				notice: "[RPC] " + JSON.stringify(envelope)
-			});
 		},
 		handshake: function (envelope, cb) {
 			health[envelope.nick] = envelope;
