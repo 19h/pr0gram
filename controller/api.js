@@ -877,8 +877,7 @@ exports.handler = co(function *( request, response ) {
 
 				db.createReadStream({
 					start: "\xFFposts\xFF" + user,
-					end: "\xFFposts\xFF" + user + "\u9999",
-					reverse: true
+					end: "\xFFposts\xFF" + user + "\u9999"
 				}).on("data", function (item) {
 					items.push(item.key.split("\xFF").pop())
 				}).on("end", co(function *() {
