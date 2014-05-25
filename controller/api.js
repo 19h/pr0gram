@@ -877,7 +877,8 @@ exports.handler = co(function *( request, response ) {
 
 				db.createReadStream({
 					start: "\xFFposts\xFF" + user,
-					end: "\xFFposts\xFF" + user + "\u9999"
+					end: "\xFFposts\xFF" + user + "\u9999",
+					reverse: true
 				}).on("data", function (item) {
 					items.push(item.key.split("\xFF").pop())
 				}).on("end", co(function *() {
@@ -904,7 +905,8 @@ exports.handler = co(function *( request, response ) {
 
 					return ref.createReadStream({
 						start: user + "\xFFlikes",
-						end: user + "\xFFlikes\u9999"
+						end: user + "\xFFlikes\u9999",
+						reverse: true
 					}).on("data", function (item) {
 						likes.push(item.key.split("\xFF").pop())
 					}).on("end", co(function *() {
