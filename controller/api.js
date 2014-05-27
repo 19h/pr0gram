@@ -734,6 +734,10 @@ exports.handler = co(function *( request, response ) {
 				"id"
 			]);
 
+			throw {
+				status: "Item deletion currently disabled"
+			};
+
 			data.id = ~~data.id;
 
 			if ( isNaN(data.id) ) {
