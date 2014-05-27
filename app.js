@@ -340,16 +340,6 @@ var worker = function () {
                         var uri = url.parse(request.url).pathname;
                         request.timing = Date.now();
 
-                        request._writeHead = request.writeHead;
-
-                        request.writeHead = function (a, b) {
-                                !b && (b = {});
-
-                                b["pr0gram"] = "r" + pr0gram.version;
-
-                                return request._writeHead(a, b);
-                        }
-
                         sanitize(uri, function (uri, fn_, forceDelegation) {
                                 session(request, response, function () {
                                         request.session.co_get = function (key) {
@@ -368,7 +358,7 @@ var worker = function () {
                                         response.writeHead = function (a, b) {
                                                 b = b || {};
 
-                                                b["libAbsinthe"] = "r" + Absinthe.version;
+                                                b["pr0gram"] = "r" + pr0gram.version;
 
                                                 return response._writeHead.apply(this, [a, b]);
                                         }
