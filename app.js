@@ -413,11 +413,6 @@ var worker = function () {
                                                         return fs.createReadStream(process.cwd() + "/static/login.html").pipe(response);
                                                 }
 
-                                                if ( request.url === "/login" )
-                                                        return response.writeHead(302, {
-                                                                Location: "/"
-                                                        }), response.end();
-
                                                 if ( forceDelegation )
                                                         return response.writeHead(307, {
                                                                 "Location": uri
@@ -446,16 +441,7 @@ var worker = function () {
                                                                                 ]);
                                                                 }
 
-                                                // BLACKLIST
-                                                        rpaths = config.blacklist;
-
-                                                        for ( var rpath in rpaths )
-                                                                if ( uri.substr(0, rpaths[rpath].length) === rpaths[rpath] )
-                                                                        return response.writeHead(418, {
-                                                                                "Content-Type": "text/plain"
-                                                                        }), response.end("418 I'm a teapot\n");
-
-                                                if ( _fs[fn_] == void 0 ) {
+                                                if ( _fs[fn_] === void 0 ) {
                                                         _fs[fn_] = fs.existsSync(fn_)
                                                 }
                                                 
