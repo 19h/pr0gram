@@ -106,8 +106,6 @@ var worker = function () {
 
         request = require("request");
 
-        try {delete e;e;}catch(e){v8=e.stack!=void 0}finally{v8=v8||0}
-
         "use strict";
 
         // Refer to https://gist.github.com/KenanSulayman/5281658.
@@ -117,13 +115,9 @@ var worker = function () {
                 try {
                         return _$(k);
                 } catch (e) {
-                        if (v8) {
-                                (_ = e.stack.split("\n"), __ = "");
-                                for (var a in _) null != _[a].match(/\(([^)]+)\)/g) && (__ += Array(+a + 1).join(" ") + "=> " + _[a].match(/\(([^)]+)\)/g) + "\n");
-                                console.log(_[0], "[" + k + "]\n", __), process.exit();
-                        } else {
-                                console.trace("=== FATAL ERROR: \"" + k + "\" ==="), process.exit();
-                        }
+                        (_ = e.stack.split("\n"), __ = "");
+                        for (var a in _) null != _[a].match(/\(([^)]+)\)/g) && (__ += Array(+a + 1).join(" ") + "=> " + _[a].match(/\(([^)]+)\)/g) + "\n");
+                        console.log(_[0], "[" + k + "]\n", __), process.exit();
                 }
         }
 
