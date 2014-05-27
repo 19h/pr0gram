@@ -127,10 +127,23 @@ var worker = function () {
                 }
         }
 
+        var _rev;
+
+        // Revision
+                // Temporary
+                        _rev = fs.readFileSync("./.git/logs/HEAD").toString().split("\n").length;
+
+                // Real
+                        childProcess.exec("git rev-list HEAD --count", function ( a, b, c ) {
+                                if ( a || !b || !b["split"] ) return false;
+
+                                _rev = +b.split("\n")[0];
+                        });
+
         // Constants
-                const Absinthe = {
+                const pr0gram = {
                         get version () {
-                                return "1";
+                                return _rev;
                         }
                 }
 
@@ -332,6 +345,16 @@ var worker = function () {
 
                         var uri = url.parse(request.url).pathname;
                         request.timing = Date.now();
+
+                        request._writeHead = request.writeHead;
+
+                        request.writeHead = function (a, b) {
+                                !b && (b = {});
+
+                                b["pr0gram"] = "r" + pr0gram.version;
+
+                                return request._writeHead(a, b);
+                        }
 
                         sanitize(uri, function (uri, fn_, forceDelegation) {
                                 session(request, response, function () {
