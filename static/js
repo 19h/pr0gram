@@ -5049,8 +5049,6 @@
 		});
 	};
 	ResultSet.prototype.loadCallback = function(data) {
-		console.log(data); console.trace()
-
 		this.waiting = false;
 
 		if (!this.totalKnown) {

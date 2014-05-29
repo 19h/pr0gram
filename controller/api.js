@@ -284,6 +284,8 @@ exports.handler = co(function *( request, response ) {
 				};
 
 				if ( data.q === "*" ) {
+					var pI = 0;
+
 					return posts.createVersionStream("all", {
 						limit: count
 					}).on("data", function (post) {
@@ -294,7 +296,7 @@ exports.handler = co(function *( request, response ) {
 
 						retval.maxId = post.version;
 
-						post.value.index = post.version;
+						post.value.index = ++pI;
 						post.value.id    = post.version;
 
 						post.value.channel.keyword = "yolo";
