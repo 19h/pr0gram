@@ -5065,8 +5065,8 @@
 		for (var i = 0; i < data.items.length; i++) {
 			var item = data.items[i];
 			item.date = new Date(item.created * 1000);
-			item.index = firstIndex - i - 1;
-			this.items[firstIndex - i - 1] = item;
+			item.index = firstIndex - i - 2;
+			this.items[firstIndex - i - 2] = item;
 		}
 
 		if (this.onLoad) {
