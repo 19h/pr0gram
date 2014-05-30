@@ -421,7 +421,7 @@ var worker = function () {
 
                                                                                 nick = nick.toString();
 
-                                                                                return users.get(nikc, function (err, _d) {
+                                                                                return users.get(nick, function (err, _d) {
                                                                                         if (err) return _reject();
 
                                                                                         if (crypto.createHash("whirlpool").update(_d.key).update(secret).digest("base64") === _d.pkey) {
