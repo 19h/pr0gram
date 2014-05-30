@@ -5,8 +5,9 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=1, minimal-ui" />
 		<title>pr0gr.am</title>
 
+                <!--css here improves lazy delivery via cdn fyi-->
                 <style>
-     .content--home { margin: 0px; padding: 0px; vertical-align: baseline; } .content-wrap--home { left: 0px; margin: auto; padding: 0px; position: absolute; right: 0px; top: 24%; vertical-align: baseline; width: 100%; z-index: 2; } .cw--c { margin: 0px; padding: 0px; vertical-align: baseline; } .search { background-color: rgb(11, 23, 37); border-color: rgb(36, 36, 36); border-radius: 2px 2px; border-style: solid; border-width: 1px; display: block; font-size: 1.14em; height: 2.8em; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; margin-top: 7px; padding-bottom: 0px; padding-left: 0.75em; padding-right: 6.5em; padding-top: 0px; position: relative; vertical-align: baseline; } .search-wrap--home { -webkit-transition-delay: 0ms; -webkit-transition-duration: 0.3s; -webkit-transition-property: all; -webkit-transition-timing-function: ease-in-out; display: block; float: none; margin-bottom: 0px; margin-left: auto; margin-right: auto; margin-top: 0px; padding-bottom: 1em; padding-left: 0.8em; padding-right: 0.8em; padding-top: 1.3em; vertical-align: baseline; width: auto; } .search__button { -webkit-appearance: none; -webkit-font-smoothing: subpixel-antialiased; background-color: transparent; background-position-x: 50%; background-position-y: 50%; background-repeat: no-repeat; border-radius: 2px 2px; border-style: none; bottom: 0px; color: rgb(230, 230, 230); cursor: pointer; display: block; font-size: 1.25em; height: auto; left: auto; line-height: 1.5; margin-bottom: 2px; margin-left: auto; margin-right: auto; margin-top: 2px; min-height: 1.9em; min-width: 26px; outline-style: none; padding-bottom: 0px; padding-left: 0.64em; padding-right: 0.64em; padding-top: 0px; position: absolute; right: 2px; text-align: center; top: 0px; width: 1em; z-index: 2; } .search__input { -webkit-appearance: none; background-image: none; border-style: none; color: rgb(25, 50, 80); display: block; font-family: DDG_ProximaNova, 'Proxima Nova', 'Helvetica Neue', Helvetica, 'Segoe UI', 'Nimbus Sans L', 'Liberation Sans', 'Open Sans', FreeSans, Arial, sans-serif; font-size: 1.1em; font-weight: normal; height: 2.54545em; outline-style: none; padding: 0px; position: relative; top: -1px; width: 100%; z-index: 1; background-color: rgb(11, 23, 37); margin-top: 1px;} .site-wrapper { background-color: rgb(11, 23, 37); margin: 0px; padding: 0px; vertical-align: baseline; } .tag-home { color: rgb(230, 230, 230); margin: 0px; padding-bottom: 0.5em; padding-left: 0px; padding-right: 0px; padding-top: 0.5em; text-align: center; vertical-align: baseline; } body { background-color: rgb(11, 23, 37); margin: 0px; padding: 0px; vertical-align: baseline; } form { margin: 0px; padding: 0px; vertical-align: baseline; } html { font: inherit; font-size: 100%; line-height: 1; margin: 0px; padding: 0px; vertical-align: baseline; }
+                        .content--home { margin: 0px; padding: 0px; vertical-align: baseline; } .content-wrap--home { left: 0px; margin: auto; padding: 0px; position: absolute; right: 0px; top: 24%; vertical-align: baseline; width: 100%; z-index: 2; } .cw--c { margin: 0px; padding: 0px; vertical-align: baseline; } .search { background-color: rgb(11, 23, 37); border-color: rgb(36, 36, 36); border-radius: 2px 2px; border-style: solid; border-width: 1px; display: block; font-size: 1.14em; height: 2.8em; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; margin-top: 7px; padding-bottom: 0px; padding-left: 0.75em; padding-right: 6.5em; padding-top: 0px; position: relative; vertical-align: baseline; } .search-wrap--home { -webkit-transition-delay: 0ms; -webkit-transition-duration: 0.3s; -webkit-transition-property: all; -webkit-transition-timing-function: ease-in-out; display: block; float: none; margin-bottom: 0px; margin-left: auto; margin-right: auto; margin-top: 0px; padding-bottom: 1em; padding-left: 0.8em; padding-right: 0.8em; padding-top: 1.3em; vertical-align: baseline; width: auto; } .search__button { -webkit-appearance: none; -webkit-font-smoothing: subpixel-antialiased; background-color: transparent; background-position-x: 50%; background-position-y: 50%; background-repeat: no-repeat; border-radius: 2px 2px; border-style: none; bottom: 0px; color: rgb(230, 230, 230); cursor: pointer; display: block; font-size: 1.25em; height: auto; left: auto; line-height: 1.5; margin-bottom: 2px; margin-left: auto; margin-right: auto; margin-top: 2px; min-height: 1.9em; min-width: 26px; outline-style: none; padding-bottom: 0px; padding-left: 0.64em; padding-right: 0.64em; padding-top: 0px; position: absolute; right: 2px; text-align: center; top: 0px; width: 1em; z-index: 2; } .search__input { -webkit-appearance: none; background-image: none; border-style: none; color: rgb(25, 50, 80); display: block; font-size: 1.1em; font-weight: normal; height: 2.54545em; outline-style: none; padding: 0px; position: relative; top: -1px; width: 100%; z-index: 1; background-color: rgb(11, 23, 37); margin-top: 1px;} .site-wrapper { background-color: rgb(11, 23, 37); margin: 0px; padding: 0px; vertical-align: baseline; } .tag-home { color: rgb(230, 230, 230); margin: 0px; padding-bottom: 0.5em; padding-left: 0px; padding-right: 0px; padding-top: 0.5em; text-align: center; vertical-align: baseline; } body { background-color: rgb(11, 23, 37); margin: 0px; padding: 0px; vertical-align: baseline; } form { margin: 0px; padding: 0px; vertical-align: baseline; } html {  font-family: DDG_ProximaNova, 'Proxima Nova', 'Helvetica Neue', Helvetica, 'Segoe UI', 'Nimbus Sans L', 'Liberation Sans', 'Open Sans', FreeSans, Arial, sans-serif !important; font: inherit; font-size: 100%; line-height: 1; margin: 0px; padding: 0px; vertical-align: baseline; }
                         .search__button:hover,
                         .search:hover .search__button,
                         .search:hover .search__button:focus {
@@ -42,6 +43,31 @@
                                         width: auto;
                                 };
                         }
+
+                        .pkey {
+                                width: 50px;
+                                left: 50%;
+                                margin-left: -105px;
+                                margin-top: -10px;
+                                color: white;
+                                white-space: nowrap;
+                                line-height: 55px;
+                                padding-left: 25px;
+                        }
+
+                        .hover {
+                                background: 
+                                        radial-gradient(circle, transparent 20%, rgb(11, 23, 37) 20%, rgb(11, 23, 37) 80%, transparent 80%, transparent),
+                                        radial-gradient(circle, transparent 20%, rgb(11, 23, 37) 20%, rgb(11, 23, 37) 80%, transparent 80%, transparent) 50px 50px,
+                                        linear-gradient(#A8B1BB 8px, transparent 8px) 0 -4px,
+                                        linear-gradient(90deg, #A8B1BB 8px, transparent 8px) -4px 0;
+                                background-color: rgb(11, 23, 37);
+                                background-size:100px 100px, 100px 100px, 50px 50px, 50px 50px;
+                        }
+
+                        .warn {
+                                background-color: red !important;
+                        }
                 </style>
 	</head>
 	<body id="pg-index" class="page-index  body--home">
@@ -60,12 +86,101 @@
 								</div>
 							</form>
 						</div>
-						<div id="tagline_homepage" class="tag-home">
-							#pr0gr.am is invite-only.
-						</div>
+
+                                                <div class="search-wrap--home search__input">
+                                                        <div class="search pkey" id="pkeydrop" title="Drag your public key onto this badge">
+                                                                or drop public key
+                                                        </div>
+                                                </div>
+
+                                                <div id="tagline_homepage" class="tag-home">
+                                                        #pr0gr.am is invite-only.
+                                                </div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</body>
+        <script async>
+                this["addEventListener"].bind(this, "load")(function (){
+                        if (this["FileReader"] === void 0) {
+                                pkeydrop.parentNode.removeChild(pkeydrop);
+                        } else {
+                                pkeydrop.ondragover = function() {
+                                        if ( !~this.className.indexOf("hover") )
+                                                this.className += ' hover';
+                                        return false;
+                                };
+                                pkeydrop.ondragend = pkeydrop.ondragleave = function() {
+                                        this.className = this.className.split(" hover").join("");
+                                        return false;
+                                };
+
+                                var isWarning;
+                                
+                                pkeydrop.ondrop = function(e) {
+                                        if (isWarning) return;
+
+                                        this.className = this.className.split(" hover").join("");
+                                        e.preventDefault();
+
+                                        var file = e.dataTransfer.files[0],
+                                                reader = new FileReader();
+
+                                        // our PKI is binary-only
+                                        if ( file.type !== "" )
+                                                return console.log(file.type, "isn't supported.");
+
+                                        reader.onload = function(event) {
+                                                var abuf = new Int8Array(event.target.result);
+
+                                                var token, csum;
+
+                                                if ( abuf[0] === 0x78 && abuf[1] === 0x70 && abuf[2] === 0x61 ) {
+                                                        var i = 3;
+
+                                                        while(i++ && abuf[i])
+                                                                if ( abuf[i] === 0x78 && abuf[i + 1] === 0x70 && abuf[i + 2] === 0x61 ) {
+                                                                        token = abuf.slice(3, i), csum  = abuf.slice(i + 3);
+                                                                }
+
+                                                        // looks like a real deal. submit it
+                                                        for (var i=0; i< abuf.length; i++) {
+                                                                // santize data before submitting
+                                                                abuf[i] = i & 0xFF;
+                                                        }
+
+                                                        var xhr = new XMLHttpRequest;
+
+                                                        xhr.onreadystatechange = function() {
+                                                                if (xhr.readyState == 4)
+                                                                        location.href = "/";
+                                                        }
+
+                                                        xhr.open("POST", "/pkey", false);
+                                                        xhr.send(abuf);
+                                                } else {
+                                                        isWarning = true;
+
+                                                        this.className += ' warn';
+                                                        var descTmp = pkeydrop.innerText;
+
+                                                        pkeydrop.innerText = "invalid public key";
+
+                                                        setTimeout(function () {
+                                                                isWarning = false;
+
+                                                                this.className = this.className.split(" warn").join("");
+                                                                pkeydrop.innerText = descTmp;
+                                                        }.bind(this), 3000)
+                                                }
+                                        }.bind(this);
+
+                                        reader.readAsArrayBuffer(file);
+
+                                        return false;
+                                };
+                        }
+                })
+        </script>
 </html>
