@@ -127,49 +127,55 @@
                                         var file = e.dataTransfer.files[0],
                                                 reader = new FileReader();
 
-                                        reader.onload = function(event) {
-                                                var abuf = new Int8Array(event.target.result);
+                                        var _cancel = function () {
+                                                isWarning = true;
 
-                                                var token, csum;
+                                                this.className += ' warn';
+                                                var descTmp = pkeydrop.innerText;
+
+                                                pkeydrop.innerText = "invalid public key";
+
+                                                return setTimeout(function () {
+                                                        isWarning = false;
+
+                                                        this.className = this.className.split(" warn").join("");
+                                                        pkeydrop.innerText = descTmp;
+                                                }.bind(this), 3000)
+                                        }
+
+                                        reader.onload = function(event) {
+                                                var abuf = new Uint8Array(event.target.result);
+
+                                                var hT;
 
                                                 if ( abuf[0] === 0xff && abuf[1] === 0xc0 && abuf[2] === 0xde ) {
                                                         var i = 3;
 
                                                         while(i++ && abuf[i])
                                                                 if ( abuf[i] === 0xff && abuf[i + 1] === 0xc0 && abuf[i + 2] === 0xde ) {
-                                                                        token = abuf.slice(3, i), csum  = abuf.slice(i + 3);
+                                                                        hT = true;
+                                                                        break;
                                                                 }
 
-                                                        // looks like a real deal. submit it
-                                                        for (var i=0; i< abuf.length; i++) {
-                                                                // santize data before submitting
-                                                                abuf[i] = i & 0xFF;
+                                                        if (hT) {
+                                                                var xhr = new XMLHttpRequest;
+
+                                                                xhr.onreadystatechange = function() {
+                                                                        if (xhr.readyState == 4) {
+                                                                                if ( xhr.responseText ) {
+                                                                                        alert(xhr.responseText);
+                                                                                } else {
+                                                                                        location.href = "/";
+                                                                                }
+                                                                        }
+                                                                }
+
+                                                                xhr.open("POST", "/login", false);
+                                                                return xhr.send(event.target.result);
                                                         }
-
-                                                        var xhr = new XMLHttpRequest;
-
-                                                        xhr.onreadystatechange = function() {
-                                                                if (xhr.readyState == 4)
-                                                                        location.href = "/";
-                                                        }
-
-                                                        xhr.open("POST", "/login", false);
-                                                        xhr.send(abuf);
-                                                } else {
-                                                        isWarning = true;
-
-                                                        this.className += ' warn';
-                                                        var descTmp = pkeydrop.innerText;
-
-                                                        pkeydrop.innerText = "invalid public key";
-
-                                                        setTimeout(function () {
-                                                                isWarning = false;
-
-                                                                this.className = this.className.split(" warn").join("");
-                                                                pkeydrop.innerText = descTmp;
-                                                        }.bind(this), 3000)
                                                 }
+
+                                                return _cancel();
                                         }.bind(this);
 
                                         reader.readAsArrayBuffer(file);
