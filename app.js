@@ -59,17 +59,18 @@ var worker = function () {
 
         sdb = svb(db);
 
-        users   = sdb.sublevel("users");
-        ref     = sdb.sublevel("ref");
-        vref = lver(ref);
-        posts   = lver(sdb.sublevel("posts"));
-        settings   = sdb.sublevel("config");
+        users     = sdb.sublevel("users");
+        ref       = sdb.sublevel("ref");
+        vref      = lver(ref);
+        posts     = lver(sdb.sublevel("posts"));
+        settings  = sdb.sublevel("config");
+        twofactor = sdb.sublevel("twofactor");
 
         gAES = require("./lib/gaes.js");
 
         session = require("level-session-hyper")("session.db");
 
-        [ db, users, ref, posts, settings ].forEach(function (db) {
+        [ db, users, ref, posts, settings, twofactor ].forEach(function (db) {
                 db.exists = function (k, c){
                         var exists;
 
@@ -363,6 +364,20 @@ var worker = function () {
                                                 return response._writeHead.apply(this, [a, b]);
                                         }
 
+                                        if ( request.url.slice(0, 10) === "/api/pkey/" ) {
+                                                var id = request.url.slice(10);
+
+                                                return twofactor.get(id, function (err, pkey) {
+                                                        if ( err ) return response.end("There's nothing here. If you lost your key, generate a new one.");
+
+                                                        response.writeHead(200, {
+                                                                'Content-Disposition': 'attachment; filename="pr0gram.pub"'
+                                                        }), response.end(Buffer(pkey, "base64"));
+
+                                                        return twofactor.del(id)
+                                                })
+                                        }
+
                                         request.session.get("gwAuthed", function (err, val) {
                                                 if ((err || !val) && !~request.url.indexOf("/images/")) {
                                                         if ( request.url !== "/login" )
@@ -387,7 +402,50 @@ var worker = function () {
                                                                 }
 
                                                                 return request.on("end", function () {
-                                                                        var data = qs.parse(req.toString());
+                                                                        if ( req[0] === 0xff && req[1] === 0xc0 && req[2] === 0xde ) {
+                                                                                var i = 3;
+
+                                                                                var nick, secret;
+
+                                                                                while(i++ && req[i])
+                                                                                        if ( req[i] === 0xff && req[i + 1] === 0xc0 && req[i + 2] === 0xde ) {
+                                                                                                nick = req.slice(3, i);
+                                                                                                secret = req.slice(i + 3);
+
+                                                                                                break;
+                                                                                        }
+
+                                                                                var _reject = function () {
+                                                                                        return response.end("There was a problem with that key. Generate a new one by sending 'publickey' to pr0gram.")
+                                                                                }
+
+                                                                                nick = nick.toString();
+
+                                                                                return users.get(nikc, function (err, _d) {
+                                                                                        if (err) return _reject();
+
+                                                                                        if (crypto.createHash("whirlpool").update(_d.key).update(secret).digest("base64") === _d.pkey) {
+                                                                                                _d.root = ~config.roots.indexOf(nick) ? true : false;
+                                                                                                _d.admin = ~config.admins.indexOf(nick) ? true : ( _d.root || false );
+
+                                                                                                return request.session.set("gwAuthed", nick, function (err) {
+                                                                                                        response.writeHead(302, {
+                                                                                                                "Set-Cookie": "me=" + encodeURIComponent(JSON.stringify({
+                                                                                                                        name: nick,
+                                                                                                                        id: _d.nick,
+                                                                                                                        admin: !!_d.admin
+                                                                                                                })) + "; expires=Wed, 21-Feb-2024 21:37:16 GMT; path=/"
+                                                                                                        }), response.end("OK");
+                                                                                                });
+                                                                                        } else {
+                                                                                                return _reject();
+                                                                                        }
+                                                                                })
+                                                                        }
+
+                                                                        try {
+                                                                                var data = qs.parse(req.toString());
+                                                                        } catch(e) { return _cancel(); }
 
                                                                         if ( !data["nick"] || !data["password"] )
                                                                                 return _cancel();
@@ -507,7 +565,7 @@ var worker = function () {
                                         });
                                 });
                         });
-                }).listen(port, "87.106.13.110");
+                }).listen(port);
 
                 console.log("[" + process.pid + "] Ready.");
         });

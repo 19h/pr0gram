@@ -8,74 +8,74 @@ var crypto = require("crypto");
 
 module.exports = function(irc) {
 	// wait for client to load
-        if ( !global.client )
-                return setTimeout(function () {
-                    module.exports(irc)
-                }, 50);
+	if ( !global.client )
+		return setTimeout(function () {
+		    module.exports(irc)
+		}, 50);
 
-        var admins = irc.config.admins || [];
+	var admins = irc.config.admins || [];
 
-        var isAdmin = exports.isAdmin = function isAdmin(address) {
-                var f = admins.filter(function(a) {
-                        return address.match(a);
-                });
-                return f.length;
-        };
+	var isAdmin = exports.isAdmin = function isAdmin(address) {
+		var f = admins.filter(function(a) {
+			return address.match(a);
+		});
+		return f.length;
+	};
 
-        var cmdchar = irc.config.chmdchar || ">";
+	var cmdchar = irc.config.chmdchar || ">";
 
-        var client = global.client;
+	var client = global.client;
 
-        var main = (function () {
-                var queue = {};
+	var main = (function () {
+		var queue = {};
 
-                return {
-                        queue: function (payload, cb) {
-                                var id = crypto.createHash("whirlpool").update(Math.random() + Date.now() + "").digest("hex");
+		return {
+			queue: function (payload, cb) {
+				var id = crypto.createHash("whirlpool").update(Math.random() + Date.now() + "").digest("hex");
 
-                                queue[id] = cb;
+				queue[id] = cb;
 
-                                global.client.write(JSON.stringify({
-                                        refKey: id,
-                                        payload: payload
-                                }));
-                        },
-                        fire: function (key, payload) {
-                                queue[key] && queue[key](payload);
-                                delete queue[key];
-                        }
-                }
-        })()
+				global.client.write(JSON.stringify({
+					refKey: id,
+					payload: payload
+				}));
+			},
+			fire: function (key, payload) {
+				queue[key] && queue[key](payload);
+				delete queue[key];
+			}
+		}
+	})()
 
-        global.handlers.push(main);
+	global.handlers.push(main);
 
-        var api = [ "hello", "resetpass", "changepass" ];
+	var api = [ "hello", "resetpass", "changepass", "publickey" ];
 
-        var accounts = function (e, irc) {
-                if ( e.target !== irc.config.info.nick ) return void 0;
+	var accounts = function (e, irc) {
+		if ( e.target !== irc.config.info.nick ) return void 0;
 
-                if ( e.user.host.split(".").slice(1).join(".") !== "users.quakenet.org" )
-                        return irc.send("notice", e.user.nick, "Please auth and +x yourself.");
+		if ( e.user.host.split(".").slice(1).join(".") !== "users.quakenet.org" )
+			return irc.send("notice", e.user.nick, "Please auth and +x yourself.");
 
-                if ( ~api.indexOf(e.text.split(" ")[0]) ) {
-                        return main.queue({
-                                type: e.text.split(" ")[0],
-                                payload: e
-                        }, function (payload) {
-                                irc.send("notice", e.user.nick, payload);
-                        })
-                }
+		if ( ~api.indexOf(e.text.split(" ")[0]) ) {
+			return main.queue({
+				type: e.text.split(" ")[0],
+				payload: e
+			}, function (payload) {
+				irc.send("notice", e.user.nick, payload);
+			})
+		}
 
-                return irc.send("notice", e.user.nick, "Hi " + e.user.nick);
-        }
+		return irc.send("notice", e.user.nick, "Hi " + e.user.nick);
+	}
 
 	var invStash = {};
 
-        irc.on("privmsg", function(m) {
-        	if (isAdmin(m.source)) {
-        		if ( m.text === ".register inviteonly" )
-        			return irc.send("privmsg", m.target, "OK. Users must now reside in: ['#pr0gr.am', '#asddasadsadsadsadsasdadsads']");
-        	}
+	irc.on("privmsg", function(m) {
+		if (isAdmin(m.source)) {
+			if ( m.text === ".register inviteonly" )
+				return irc.send("privmsg", m.target, "OK. Users must now reside in: ['#pr0gr.am', '#asddasadsadsadsadsasdadsads']");
+		}
 
 		if ( m.text === "requestinvite" && m.target === "#pr0gr.am" ) {
 			clearTimeout(invStash[m.user.host]);
@@ -93,107 +93,107 @@ module.exports = function(irc) {
 				return irc.send("notice", m.user.nick, "Access denied. You must be invited to #pr0gr.am and request an invite.");
 		}
 
-                if (m.text.length && isAdmin(m.source)) {
-                        var responder = {};
+		if (m.text.length && isAdmin(m.source)) {
+			var responder = {};
 
-                        var sendto = m.target[0] == "#" ? m.target : m.user.nick;
-                        responder.respond = irc.send.bind(irc, "privmsg", sendto);
+			var sendto = m.target[0] == "#" ? m.target : m.user.nick;
+			responder.respond = irc.send.bind(irc, "privmsg", sendto);
 
-                        if ( m.target !== irc.config.info.nick ) return void 0;
+			if ( m.target !== irc.config.info.nick ) return void 0;
 
-                        var _cmd = m.text.split(" "),
-                             cmd = _cmd[0];
+			var _cmd = m.text.split(" "),
+			     cmd = _cmd[0];
 
-                        if (cmds[cmd]) {
-                                return cmds[cmd].apply(responder, [ m, _cmd[1] ]);
-                        } else {
-                                return accounts(m, irc);
-                        }
-                } else {
-                        return accounts(m, irc);
-                }
-        });
+			if (cmds[cmd]) {
+				return cmds[cmd].apply(responder, [ m, _cmd[1] ]);
+			} else {
+				return accounts(m, irc);
+			}
+		} else {
+			return accounts(m, irc);
+		}
+	});
 
-        irc.on("403", function (m) {
-                if (!irc.config.bcnicks) return void 0;
+	irc.on("403", function (m) {
+		if (!irc.config.bcnicks) return void 0;
 
-                irc.config.bcnicks.forEach(function (nick) {
-                        irc.send("notice", nick, m.text)
-                });
-        })
+		irc.config.bcnicks.forEach(function (nick) {
+			irc.send("notice", nick, m.text)
+		});
+	})
 
-        function saveConfig() {
-                delete irc.config["$0"];
-                delete irc.config["_"];
-                irc.supervisor({
-                        save: JSON.stringify(irc.config, null, 4)
-                });
-        }
+	function saveConfig() {
+		delete irc.config["$0"];
+		delete irc.config["_"];
+		irc.supervisor({
+			save: JSON.stringify(irc.config, null, 4)
+		});
+	}
 
-        var cmds = {};
+	var cmds = {};
 
-        cmds.reload = function() {
-                irc.supervisor({
-                        reload: true
-                });
-        };
-        
-        cmds.admin = function(m) {
-                irc.send("notice", m.user.nick, "Yes you are");
-        }
+	cmds.reload = function() {
+		irc.supervisor({
+			reload: true
+		});
+	};
+	
+	cmds.admin = function(m) {
+		irc.send("notice", m.user.nick, "Yes you are");
+	}
 
-        cmds.join = function(m, chan) {
-                if (!~irc.config.channels.indexOf(chan)) {
-                        irc.config.channels.push(chan);
-                        saveConfig();
-                }
-                irc.send("join", chan);
-        };
+	cmds.join = function(m, chan) {
+		if (!~irc.config.channels.indexOf(chan)) {
+			irc.config.channels.push(chan);
+			saveConfig();
+		}
+		irc.send("join", chan);
+	};
 
-        cmds.listusers = function(m, chan) {
-                if (!global.chanstats[chan])
-                        return irc.send("notice", m.user.nick, "I'm not on that channel.");
+	cmds.listusers = function(m, chan) {
+		if (!global.chanstats[chan])
+			return irc.send("notice", m.user.nick, "I'm not on that channel.");
 
-                this.respond(JSON.stringify(global.chanstats[chan]));
-        };
+		this.respond(JSON.stringify(global.chanstats[chan]));
+	};
 
-        cmds.listchans = function(m) {
-                return irc.send("notice", m.user.nick, "I'm currently on these channels: " + Object.keys(global.chanstats).join(", "));
-        };
+	cmds.listchans = function(m) {
+		return irc.send("notice", m.user.nick, "I'm currently on these channels: " + Object.keys(global.chanstats).join(", "));
+	};
 
-        cmds.part = function(m, chan) {
-                chan = chan || m.target;
-                if (~irc.config.channels.indexOf(chan)) {
-                        irc.config.channels.splice(irc.config.channels.indexOf(chan), 1);
-                        saveConfig();
-                }
+	cmds.part = function(m, chan) {
+		chan = chan || m.target;
+		if (~irc.config.channels.indexOf(chan)) {
+			irc.config.channels.splice(irc.config.channels.indexOf(chan), 1);
+			saveConfig();
+		}
 
-                // cleanup stats
-                delete global.chanstats[chan];
+		// cleanup stats
+		delete global.chanstats[chan];
 
-                irc.send("part", chan);
-        };
+		irc.send("part", chan);
+	};
 
-        cmds.get = function(m, jpath) {
-                path = jpath.split(/[\[\]\.]+/g);
-                var c = irc.config;
+	cmds.get = function(m, jpath) {
+		path = jpath.split(/[\[\]\.]+/g);
+		var c = irc.config;
 
-                while (c && path.length)
-                        c = c[path.shift()];
+		while (c && path.length)
+			c = c[path.shift()];
 
-                this.respond(JSON.stringify(c));
-        };
+		this.respond(JSON.stringify(c));
+	};
 
-        cmds.set = function(m, jpath, val) {
-                path = jpath.split(/[\[\]\.]+/g);
-                var c = irc.config;
-                while (c && path.length > 1)
-                        c = c[path.shift()];
-                var last = path.shift();
-                c[last] = JSON.parse(val);
-                saveConfig();
-                this.respond(last + " = " + JSON.stringify(c[last]));
-        }
+	cmds.set = function(m, jpath, val) {
+		path = jpath.split(/[\[\]\.]+/g);
+		var c = irc.config;
+		while (c && path.length > 1)
+			c = c[path.shift()];
+		var last = path.shift();
+		c[last] = JSON.parse(val);
+		saveConfig();
+		this.respond(last + " = " + JSON.stringify(c[last]));
+	}
 
-        return cmds;
+	return cmds;
 };

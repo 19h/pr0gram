@@ -141,7 +141,7 @@
                                                         this.className = this.className.split(" warn").join("");
                                                         pkeydrop.innerText = descTmp;
                                                 }.bind(this), 3000)
-                                        }
+                                        }.bind(this)
 
                                         reader.onload = function(event) {
                                                 var abuf = new Uint8Array(event.target.result);
@@ -162,10 +162,11 @@
 
                                                                 xhr.onreadystatechange = function() {
                                                                         if (xhr.readyState == 4) {
-                                                                                if ( xhr.responseText ) {
-                                                                                        alert(xhr.responseText);
-                                                                                } else {
+                                                                                if ( xhr.responseText === "OK" ) {
                                                                                         location.href = "/";
+                                                                                } else {
+                                                                                        _cancel();
+                                                                                        console.log(xhr.responseText);
                                                                                 }
                                                                         }
                                                                 }

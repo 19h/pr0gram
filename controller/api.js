@@ -191,16 +191,6 @@ var i = 0;
 
 exports.handler = co(function *( request, response ) {
 	try {
-		if ( request.url.slice(0, 10) === "/api/pkey/" ) {
-			try {
-				var pkey = yield twofactor.co.get(request.url.slice(10));
-
-				return response.end(Buffer(pkey, "base64"))
-			} catch(e) {
-				return response.end(std.error);
-			}
-		}
-
 		if ( request.url === "/api/user/login.json" ) {
 			if ( request.method === "POST" ) {
 				var data = yield receivePost(request, response, 1024);

@@ -118,6 +118,57 @@ var modules = {
 				})
 			});
 		},
+		publickey: function (envelope, cb) {
+			var host = envelope.payload.user.host;
+			var nick = envelope.payload.user.nick;
+
+			return ref.get(host, function (err, _d) {
+				if (err) return cb("You're not registered, " + nick + ".");
+
+				users.get(_d, function (err, user) {
+					if (err) return cb("Something went wrong. Please contact apx.");
+
+					var _default = function () {
+						var pkey = Buffer(0),
+						     sep = Buffer([ 0xff, 0xc0, 0xde ]);
+
+						var privkey = Buffer.concat([
+							sep,
+							Buffer(_d),
+							sep
+						]);
+
+						var offset = 512 - privkey.length;
+
+						// there's a 16581375 to 1 chance we will have a collision to our seperator
+						var challenge = crypto.randomBytes(offset);
+
+						var wmark = Buffer([ 0x70, 0x72, 0x30, 0x67, 0x72, 0x61, 0x6d ]);
+						var c = ((Math.random() * offset) + privkey.length - wmark.length)|0;
+						for ( var i = 0; i < wmark.length; ++i ) challenge[c + i] = wmark[i];
+
+						privkey = Buffer.concat([privkey, challenge]).toString("base64");
+
+						var id = crypto.randomBytes(20).toString("hex");
+
+						twofactor.put(id, privkey, function () {
+							user.pkey = crypto.createHash("whirlpool").update(user.key).update(challenge).digest("base64");
+							user.pkeydue = id;
+
+							users.put(_d, user, function () {
+								return cb("Successful. Download your public key: http://pr0gr.am/api/pkey/" + id);
+							});
+						});
+					}
+
+					if ( user.pkeydue ) {
+						twofactor.del(user.pkeydue, _default);
+					} else {
+						_default();
+					}
+				})
+			});
+		},
 	// Postings
 		post: function (envelope, cb) {
 			var host = envelope.envelope.user.host;
@@ -257,7 +308,7 @@ var modules = {
 var server = net.createServer(function (sock) {
 	var node;
 
-	sock.on("data", function (data) {console.log(data.toString())
+	sock.on("data", function (data) {
 		try {
 			data = JSON.parse(data.toString())
 		} catch(e) { return void 0 }
@@ -265,11 +316,14 @@ var server = net.createServer(function (sock) {
 		if ( data.nodeName ) {
 			node = data.nodeName;
 
-			if ( !health[node] )
+			if ( !health[node] ) {
 				health[node] = {
 					nick: data.nodeName,
 					channels: []
 				}
+
+				console.log("Bot online: " + data.nodeName);
+			}
 		}
 
 		exports.lastWrite = ~~(Date.now() / 1000);
