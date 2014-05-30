@@ -127,10 +127,6 @@
                                         var file = e.dataTransfer.files[0],
                                                 reader = new FileReader();
 
-                                        // our PKI is binary-only
-                                        if ( file.type !== "" )
-                                                return console.log(file.type, "isn't supported.");
-
                                         reader.onload = function(event) {
                                                 var abuf = new Int8Array(event.target.result);
 
