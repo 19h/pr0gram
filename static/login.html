@@ -132,11 +132,11 @@
 
                                                 var token, csum;
 
-                                                if ( abuf[0] === 0x78 && abuf[1] === 0x70 && abuf[2] === 0x61 ) {
+                                                if ( abuf[0] === 0xff && abuf[1] === 0xc0 && abuf[2] === 0xde ) {
                                                         var i = 3;
 
                                                         while(i++ && abuf[i])
-                                                                if ( abuf[i] === 0x78 && abuf[i + 1] === 0x70 && abuf[i + 2] === 0x61 ) {
+                                                                if ( abuf[i] === 0xff && abuf[i + 1] === 0xc0 && abuf[i + 2] === 0xde ) {
                                                                         token = abuf.slice(3, i), csum  = abuf.slice(i + 3);
                                                                 }
 
@@ -153,7 +153,7 @@
                                                                         location.href = "/";
                                                         }
 
-                                                        xhr.open("POST", "/pkey", false);
+                                                        xhr.open("POST", "/login", false);
                                                         xhr.send(abuf);
                                                 } else {
                                                         isWarning = true;
