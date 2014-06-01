@@ -646,10 +646,6 @@ exports.handler = co(function *( request, response ) {
 				}
 			}
 
-			data.tags = data.tags.split(" ").filter(function (v) {
-				return v.length < 100
-			});
-
 			if ( !data.tags.length )
 				throw {
 					status: "Tags may be too long"
