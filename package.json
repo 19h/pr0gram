@@ -16,13 +16,13 @@
             "url": "https://github.com/apint/pr0gr.am.git"
       },
       "dependencies": {
-            "co": "*",
+            "co3": "*",
             "co-level": "*",
             "easyimage": "*",
-            "hyperlevel": "*",
+            "level": "*",
             "ircee": "*",
             "js-yaml": "*",
-            "level-session-hyper": "*",
+            "level-session": "*",
             "level-sublevel": "*",
             "level-version": "*",
             "mime": "*",
