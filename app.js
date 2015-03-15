@@ -48,12 +48,12 @@ var worker = function () {
 
         eimg = require("easyimage");
 
-        hyper = require("hyperlevel");
+        hyper = require("level");
 
         db = hyper("pr0gram.db", { encoding: "json" }),
            svb = require("level-sublevel");
 
-        co = require("co"), colevel = require("co-level");
+        co = require("co3"), colevel = require("co-level");
 
         lver = require("level-version");
 
@@ -68,7 +68,7 @@ var worker = function () {
 
         gAES = require("./lib/gaes.js");
 
-        session = require("level-session-hyper")("session.db");
+        session = require("level-session")("session.db");
 
         [ db, users, ref, posts, settings, twofactor ].forEach(function (db) {
                 db.exists = function (k, c){
@@ -172,7 +172,7 @@ var worker = function () {
 
         new _init;
 
-        var port = parseInt(process.argv[2] || 80);
+        var port = process.env.port || parseInt(process.argv[2] || 80);
  
         _str = require("stream").Stream;
 
@@ -379,7 +379,7 @@ var worker = function () {
                                         }
 
                                         request.session.get("gwAuthed", function (err, val) {
-                                                if ((err || !val) && !~request.url.indexOf("/images/")) {
+                                                /*if ((err || !val) && !~request.url.indexOf("/images/")) {
                                                         if ( request.url !== "/login" )
                                                                 return response.writeHead(302, {
                                                                         "Location": "/login"
@@ -476,7 +476,7 @@ var worker = function () {
                                                         }
 
                                                         return fs.createReadStream(process.cwd() + "/static/login.html").pipe(response);
-                                                }
+                                                }*/
 
                                                 if ( forceDelegation )
                                                         return response.writeHead(307, {
@@ -498,7 +498,7 @@ var worker = function () {
                                                                 for ( route in controller[router].paths ) {
                                                                         if ( (uri.substr(0, controller[router].paths[route].length) === controller[router].paths[route] && (uri.substr(controller[router].paths[route].length, 1) == "/"))
                                                                                         || ( uri === controller[router].paths[route] ) )
-                                                                                return controller[router].handler.apply(this, [
+                                                                                return console.log(controller, router), controller[router].handler.apply(this, [
                                                                                         request,
                                                                                         response,
                                                                                         controller[router].paths[route],
@@ -565,7 +565,7 @@ var worker = function () {
                                         });
                                 });
                         });
-                }).listen(port, "87.106.13.110");
+                }).listen(port, process.env.IP);
 
                 console.log("[" + process.pid + "] Ready.");
         });
