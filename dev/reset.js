@@ -19,7 +19,7 @@ request = require("request");
 
 eimg = require("easyimage");
 
-hyper = require("hyperlevel");
+hyper = require("level");
 
 db = hyper("pr0gram.db", { encoding: "json" }),
    svb = require("level-sublevel");
@@ -36,7 +36,7 @@ vref = lver(ref);
 posts   = lver(sdb.sublevel("posts"));
 settings   = sdb.sublevel("config");
 
-session = require("level-session-hyper")("session.db");
+session = require("level-session")("session.db");
 
 [ db, users, ref, posts, settings ].forEach(function (db) {
         db.exists = function (k, c){
